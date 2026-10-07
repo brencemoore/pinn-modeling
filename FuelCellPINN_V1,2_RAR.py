@@ -257,6 +257,13 @@ model.train()
 # Save trained model to models/ folder
 model.save("models/pinn_model")
 
+# Prints exact file name for saved model
+print("Saved model:")
+print(max(
+    (os.path.join("models", f) for f in os.listdir("models")),
+    key=os.path.getmtime
+))
+
 
 
 #10) Predict and Visualize Results
