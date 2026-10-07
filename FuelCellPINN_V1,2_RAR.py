@@ -142,7 +142,7 @@ data = dde.data.PDE(
 )
 
 # 6). Construct the Neural Network Architecture
-layer_size = [2] + [20] * 5 + [3]  # Input (x, t) -> 5 hidden layers of 20 neurons -> Output (u_z, u_r, p)
+layer_size = [2] + [30] * 6 + [3]  # Input (x, t) -> 5 hidden layers of 20 neurons -> Output (u_z, u_r, p)
 activation = "tanh"
 initializer = "Glorot normal"
 
@@ -168,80 +168,80 @@ weights = [10, 10, 10, 1, 1, 1, 1, 1, 1, 1, 1] #first 3 physics, last 8 BCs
 print("Training with Adam optimizer...")
 model.compile("adam", lr=0.001, loss_weights=weights)
 
-# #---Plot current collocation grid---
-# x_train = data.train_x 
+#---Plot current collocation grid---
+x_train = data.train_x 
 
-# x_coords = x_train[:, 0]
-# y_coords = x_train[:, 1]
+x_coords = x_train[:, 0]
+y_coords = x_train[:, 1]
 
-# plt.figure(figsize=(6, 6))
-# plt.scatter(x_coords, y_coords, s=15, c='blue', alpha=0.7, label='Collocation Points')
-# plt.title("DeepXDE Collocation Grid")
-# plt.xlabel("X coordinate")
-# plt.ylabel("Y coordinate")
-# plt.grid(True, linestyle="--", alpha=0.5)
-# plt.legend()
-# plt.show(block=False)
-# plt.pause(0.001)
-# #------------------------------
+plt.figure(figsize=(6, 6))
+plt.scatter(x_coords, y_coords, s=15, c='blue', alpha=0.7, label='Collocation Points')
+plt.title("DeepXDE Collocation Grid")
+plt.xlabel("X coordinate")
+plt.ylabel("Y coordinate")
+plt.grid(True, linestyle="--", alpha=0.5)
+plt.legend()
+plt.show(block=False)
+plt.pause(0.001)
+#------------------------------
 
-model.train(iterations=7000) #Adam iterations before RAR
+model.train(iterations=1000) #Adam iterations before RAR
 
-# # 8). Residual-based Adaptive Refinement W/ Adam
+# 8). Residual-based Adaptive Refinement W/ Adam
 
-# max_rar_iterations = 3
-# points_to_add_per_iteration = 200
-# residual_threshold = 1e-6
+max_rar_iterations = 10
+points_to_add_per_iteration = 400
+residual_threshold = 1e-6
 
-# for i in range(max_rar_iterations):
-#     #---Plot collocation grid---
-#     x_train = data.train_x 
+for i in range(max_rar_iterations):
+    #---Plot collocation grid---
+    x_train = data.train_x 
 
-#     x_coords = x_train[:, 0]
-#     y_coords = x_train[:, 1]
+    x_coords = x_train[:, 0]
+    y_coords = x_train[:, 1]
 
-#     plt.figure(figsize=(6, 1))
-#     plt.scatter(x_coords, y_coords, s=15, c='blue', alpha=0.7, label='Collocation Points')
-#     plt.title("DeepXDE Collocation Grid")
-#     plt.xlabel("X coordinate")
-#     plt.ylabel("Y coordinate")
-#     plt.grid(True, linestyle="--", alpha=0.5)
-#     plt.legend()
-#     plt.show(block=False)
-#     plt.pause(0.001)
-#     #------------------------------
+    plt.figure(figsize=(6, 1))
+    plt.scatter(x_coords, y_coords, s=15, c='blue', alpha=0.7, label='Collocation Points')
+    plt.title("DeepXDE Collocation Grid")
+    plt.xlabel("X coordinate")
+    plt.ylabel("Y coordinate")
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.legend()
+    plt.show(block=False)
+    plt.pause(0.001)
+    #------------------------------
     
-#     # 1. Sample a large pool of random candidate points across the domain
-#     X_candidates = geom.random_points(1000) #define number points to sample
+    # 1. Sample a large pool of random candidate points across the domain
+    X_candidates = geom.random_points(4000) #define number points to sample
     
-#     # 2. FIX: Use model.predict with the operator argument pointing to physLoss
-#     # This evaluates your custom PDE equations directly
-#     f_residuals_list = model.predict(X_candidates, operator=physLoss)
+    # 2. FIX: Use model.predict with the operator argument pointing to physLoss
+    # This evaluates your custom PDE equations directly
+    f_residuals_list = model.predict(X_candidates, operator=physLoss)
     
-#     # 3. Stack the list of arrays horizontally into a single 2D array
-#     f_residuals = np.hstack(f_residuals_list) # Shape becomes (10000, 3)
-#     abs_residuals = np.abs(f_residuals)
+    # 3. Stack the list of arrays horizontally into a single 2D array
+    f_residuals = np.hstack(f_residuals_list) # Shape becomes (10000, 3)
+    abs_residuals = np.abs(f_residuals)
     
-#     # 4. Average across your 3 physical equations (axis=1) to get 1 residual error per point
-#     abs_residuals = np.mean(abs_residuals, axis=1) # Shape becomes (10000,)
-#     mean_residual = np.mean(abs_residuals)
+    # 4. Average across your 3 physical equations (axis=1) to get 1 residual error per point
+    abs_residuals = np.mean(abs_residuals, axis=1) # Shape becomes (10000,)
+    mean_residual = np.mean(abs_residuals)
 
-#     print(f"RAR Iteration {i+1}: Mean Residual = {mean_residual:.5f}")
+    print(f"RAR Iteration {i+1}: Mean Residual = {mean_residual:.5f}")
     
-#     # 5. Check for early termination if overall accuracy is sufficient
-#     if mean_residual < residual_threshold:
-#         print("Target residual threshold achieved. Stopping refinement.")
-#         break
+    # 5. Check for early termination if overall accuracy is sufficient
+    if mean_residual < residual_threshold:
+        print("Target residual threshold achieved. Stopping refinement.")
+        break
         
-#     # 6. Identify the indices of points with the largest residuals (Greedy approach)
-#     worst_indices = np.argpartition(abs_residuals, -points_to_add_per_iteration)[-points_to_add_per_iteration:]
-#     new_points = X_candidates[worst_indices]
+    # 6. Identify the indices of points with the largest residuals (Greedy approach)
+    worst_indices = np.argpartition(abs_residuals, -points_to_add_per_iteration)[-points_to_add_per_iteration:]
+    new_points = X_candidates[worst_indices]
     
-#     # 7. Inject the worst performing points directly into the active training pool
-#     model.data.add_anchors(new_points)
+    # 7. Inject the worst performing points directly into the active training pool
+    model.data.add_anchors(new_points)
     
-#     # 8. Retrain the network with the newly added constraints
-#     model.train(iterations=1000) #define how many training iterations between RAR sessions 
+    # 8. Retrain the network with the newly added constraints
+    model.train(iterations=1000) #define how many training iterations between RAR sessions 
 
 
 
