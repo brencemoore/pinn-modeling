@@ -255,15 +255,13 @@ model.train()
 
 
 # Save trained model to models/ folder
-model.save("models/pinn_model")
+os.makedirs("models", exist_ok=True)
+
+save_path = model.save("models/pinn_model")
 
 # Prints exact file name for saved model
-print("Saved model:")
-print(max(
-    (os.path.join("models", f) for f in os.listdir("models")),
-    key=os.path.getmtime
-))
-
+print("Saved model: ")
+print(save_path)
 
 
 #10) Predict and Visualize Results
