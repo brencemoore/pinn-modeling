@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
 #GPU check
+print("PyTorch version:", torch.__version__)
+print("CUDA version:", torch.version.cuda)
 print("GPU available:", torch.cuda.is_available())
 
 
@@ -250,6 +252,10 @@ for i in range(max_rar_iterations):
 print("Fine-tuning with L-BFGS optimizer...")
 model.compile("L-BFGS")
 model.train()
+
+
+# Save trained model to models/ folder
+model.save("models/pinn_model")
 
 
 
