@@ -273,6 +273,15 @@ model.compile("L-BFGS")
 model.train()
 
 
+# Save trained model to models/ folder
+os.makedirs("models", exist_ok=True)
+
+save_path = model.save("models/pinn_model_V1.3")
+
+# Prints exact file name for saved model
+print("Saved model: ")
+print(save_path)
+
 
 #10) Predict and Visualize Results
 
