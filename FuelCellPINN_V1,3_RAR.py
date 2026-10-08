@@ -21,6 +21,10 @@ print("CUDA version:", torch.version.cuda)
 print("GPU available:", torch.cuda.is_available())
 
 
+SEED = 42
+dde.config.set_random_seed(SEED)
+
+
 
 #1) DEFINE MODEL INPUTS
 rho = 998 #kg/m^3 #CONSTANT FOR NOW
