@@ -16,6 +16,8 @@ from matplotlib.colors import LogNorm
 import pandas as pd
 
 #GPU check
+print("PyTorch version:", torch.__version__)
+print("CUDA version:", torch.version.cuda)
 print("GPU available:", torch.cuda.is_available())
 
 
