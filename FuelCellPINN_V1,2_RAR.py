@@ -3,6 +3,7 @@
 #Residual-based adaptive refinement
 ##########################################
 
+#Push test
 
 import os
 os.environ["DDE_BACKEND"] = "pytorch"
@@ -24,7 +25,7 @@ print("GPU available:", torch.cuda.is_available())
 #1) DEFINE MODEL INPUTS
 rho = 998 #kg/m^3 #CONSTANT FOR NOW
 mu = 0.001002 #N*s/m^2 #CONSTANT FOR NOW
-u0 = 0.1 #m/s
+u0 = 0.12 #m/s
 L=0.1 #m, tube length
 R=0.0075 #m, tube radius
 L_R = L/R
