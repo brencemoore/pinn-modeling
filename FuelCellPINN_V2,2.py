@@ -24,9 +24,12 @@ dde.config.set_default_float("float64")
 
 
 #GPU check
+print("PyTorch version:", torch.__version__)
+print("CUDA version:", torch.version.cuda)
 print("GPU available:", torch.cuda.is_available())
 
-
+SEED = 42
+dde.config.set_random_seed(SEED)
 
 #1) DEFINE MODEL INPUTS
 rho = 998        #kg/m^3 #CONSTANT FOR NOW
@@ -70,17 +73,8 @@ j0 = 1.2e4
 alpha = 0.5
 eta = 0.1 #constant for now
 beta1 = 1
-# j= 5e4             #current density,A/m^2
-# J = j/(2*F)        #molar flux q'', mol/(m^2*s)
 n=2
-
-
-
-
-
-
 k = 1.380649e-23;  # {J/K} Boltzmann Constant
-
 
 L_R = L/R
 R_L = R/L
@@ -88,21 +82,21 @@ Re = rho*uAVG*2*R/mu
 
 #--High Level Operational Controls--
 #Collocation grid initial
-boundary_pts = 800
-interior_pts = 1500
+boundary_pts = 1500
+interior_pts = 2000
 
 #Adam Solver
-iter_Adam_initialize = 3000 #iterations of Adam before RAR
+iter_Adam_initialize = 8000 #iterations of Adam before RAR
 
 #Residual-based Adaptive Refinement
 
 iter_Adam_RAR = 1000 #iterations of Adam between RAR steps
-max_run_RAR = 20 #steps of RAR 
+max_run_RAR = 0 #steps of RAR 
 gtol_RAR = 1e-7 #Residual to stop RAR 
 pts_add = 100
 
 #LBFGS Solver
-maxiter_LBFGS = 3000 #max iterations to run LBFGS
+maxiter_LBFGS = 2000 #max iterations to run LBFGS
 gtol_LBFGS = 1e-8 
 #------------------------------------------
 
@@ -115,8 +109,6 @@ flowbox = dde.geometry.Rectangle([0,0],[1,R_L])
 geom = flowbox #allows for addition of other geometry modifications
 
 #3) Compute Physics Equations
-
-
 
 def physLoss(x,y):
     """
@@ -339,6 +331,16 @@ model.compile("L-BFGS", loss_weights=weights)
 model.train()
 
 
+# Save trained model to models/ folder
+os.makedirs("models", exist_ok=True)
+
+save_path = model.save("models/pinn_model")
+
+# Prints exact file name for saved model
+print("Saved model: ")
+print(save_path)
+
+
 
 #10) Predict and Visualize Results
 
@@ -352,6 +354,8 @@ points = np.vstack((np.ravel(X), np.ravel(Y))).T
 predictions = model.predict(points)
 
 X1 = predictions[:, 0].reshape(100, 100)
+
+
 
 # ---Plotting X1 contour--- 
 plt.figure(figsize=(10, 2))
@@ -369,7 +373,9 @@ plt.title('PINN Prediction: H2 Contour In Pipe')
 plt.xlabel('$x$ (Length)')
 plt.ylabel('$y$ (Height)')
 plt.tight_layout()
-plt.show()
+plt.show(block=False)
+
+
 
 #--- Plotting X1 Along Wall ---
 z_hat = np.linspace(0, 1, 200)
