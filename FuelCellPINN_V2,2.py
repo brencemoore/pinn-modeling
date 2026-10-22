@@ -1,5 +1,7 @@
 #Fuel Cell PINN Model V2 - DeepXDE with PyTorch
-#Bailey Steger - 10/19/2026
+#10/22/2026
+#Bailey Steger
+#Brence Moore
 
 #Species transport and basic reactions test (normalized)
 #H2 -> H20 at walls
