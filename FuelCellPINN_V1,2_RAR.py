@@ -14,6 +14,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+from datetime import datetime
 
 #GPU check
 print("PyTorch version:", torch.__version__)
@@ -258,7 +259,9 @@ model.train()
 # Save trained model to models/ folder
 os.makedirs("models", exist_ok=True)
 
-save_path = model.save("models/pinn_model")
+# Name includes model version and training date/time (DeepXDE appends -<step>.pt)
+timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+save_path = model.save(f"models/pinn_model_V1.2_{timestamp}")
 
 # Prints exact file name for saved model
 print("Saved model: ")
