@@ -1,0 +1,172 @@
+{
+  "model_a": {
+    "checkpoint": "models\\pinn_model_V1.3-12689.pt",
+    "version": "V1.3",
+    "trained": null,
+    "step": 12689,
+    "layer_size": [
+      2,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      3
+    ],
+    "parameters": 4833,
+    "dtype": "float32",
+    "lbfgs_iterations": 1690
+  },
+  "model_b": {
+    "checkpoint": "models\\pinn_model_V1.3-12661.pt",
+    "version": "V1.3",
+    "trained": null,
+    "step": 12661,
+    "layer_size": [
+      2,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      3
+    ],
+    "parameters": 4833,
+    "dtype": "float32",
+    "lbfgs_iterations": 1662
+  },
+  "summary_lower_is_better": [
+    {
+      "metric": "PDE axial_momentum RMSE",
+      "a": 0.0010960067708287867,
+      "b": 0.0011635700995353134,
+      "change_percent": 6.164499207923338,
+      "better": "A"
+    },
+    {
+      "metric": "PDE radial_momentum RMSE",
+      "a": 0.0009197081213567292,
+      "b": 0.0006233979314747899,
+      "change_percent": -32.21785075082629,
+      "better": "B"
+    },
+    {
+      "metric": "PDE continuity RMSE",
+      "a": 0.000990254963165623,
+      "b": 0.0010090223986608069,
+      "change_percent": 1.8952124647967947,
+      "better": "A"
+    },
+    {
+      "metric": "BC top_wall_u_z_equals_0 RMSE",
+      "a": 0.0010000565713822217,
+      "b": 0.0010838535858857146,
+      "change_percent": 8.379227425871854,
+      "better": "A"
+    },
+    {
+      "metric": "BC top_wall_u_r_equals_0 RMSE",
+      "a": 0.0010417069677495902,
+      "b": 0.0005141354632048364,
+      "change_percent": -50.64490503355964,
+      "better": "B"
+    },
+    {
+      "metric": "BC axis_u_r_equals_0 RMSE",
+      "a": 0.00027882191924069887,
+      "b": 0.00027551040379446544,
+      "change_percent": -1.1876811748701457,
+      "better": "B"
+    },
+    {
+      "metric": "BC axis_du_z_dr_equals_0 RMSE",
+      "a": 0.0003922824789376898,
+      "b": 0.00035952585171697253,
+      "change_percent": -8.350265173561402,
+      "better": "B"
+    },
+    {
+      "metric": "BC axis_dp_dr_equals_0 RMSE",
+      "a": 0.00044640322487582505,
+      "b": 0.0003082086925900586,
+      "change_percent": -30.957332874153792,
+      "better": "B"
+    },
+    {
+      "metric": "BC inlet_u_z_equals_1 RMSE",
+      "a": 0.07902611962740447,
+      "b": 0.08041224712541546,
+      "change_percent": 1.7540118438642365,
+      "better": "A"
+    },
+    {
+      "metric": "BC inlet_u_r_equals_0 RMSE",
+      "a": 0.014117227252683646,
+      "b": 0.010964209864244862,
+      "change_percent": -22.334537313900675,
+      "better": "B"
+    },
+    {
+      "metric": "BC outlet_p_equals_0 RMSE",
+      "a": 0.00015407316048773875,
+      "b": 0.00018858627841013452,
+      "change_percent": 22.400473783454544,
+      "better": "A"
+    },
+    {
+      "metric": "Inference ms (n=40,000)",
+      "a": 2.1880000131204724,
+      "b": 2.0725999493151903,
+      "change_percent": -5.274225919254056,
+      "better": "B"
+    }
+  ],
+  "validation_prediction_differences_b_minus_a": {
+    "u_z": {
+      "rmse": 0.009679693728685379,
+      "max_abs": 0.031789183616638184,
+      "relative_l2": 0.007256944198161364
+    },
+    "u_r": {
+      "rmse": 0.000723537930753082,
+      "max_abs": 0.018174633383750916,
+      "relative_l2": 0.036262862384319305
+    },
+    "p": {
+      "rmse": 0.0053541166707873344,
+      "max_abs": 0.015245914459228516,
+      "relative_l2": 0.005496273748576641
+    }
+  },
+  "grid_prediction_differences_b_minus_a": {
+    "u_z": {
+      "rmse": 0.009858129546046257,
+      "max_abs": 0.0318148136138916,
+      "relative_l2": 0.007388263009488583
+    },
+    "u_r": {
+      "rmse": 0.0007223864085972309,
+      "max_abs": 0.03778254985809326,
+      "relative_l2": 0.03654119744896889
+    },
+    "p": {
+      "rmse": 0.005869507789611816,
+      "max_abs": 0.33698034286499023,
+      "relative_l2": 0.0060463715344667435
+    }
+  },
+  "runtime": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.12.0+cu126",
+    "deepxde": "1.15.0",
+    "device": "cuda"
+  },
+  "notes": [
+    "Lower PDE residuals mean better consistency with the encoded equations, not necessarily physical accuracy.",
+    "Boundary metrics are errors against the boundary conditions encoded in this script.",
+    "Inference timing depends on hardware and system load."
+  ]
+}
