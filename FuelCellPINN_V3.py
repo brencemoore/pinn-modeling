@@ -67,14 +67,7 @@ epsB = 361.53 #K
 #X1_0 = 
 #X2_0 = 
 
-#Diffusion calculations
-BE = T_w/np.sqrt(epsA * epsB);                                                  # Binary Energy Ratio
-omega_AB = (0.4609*BE**2 + 33.2*BE + 37.6)/(BE**2 + 44.96*BE + 3.747);        # Collision Integral
-D = 1e-4 * 0.0018583*(T_w**3*(1/M_A+1/M_B))**0.5 /(p_atm*sigma_AB**2*omega_AB)  # diffusion coefficient (inter species), m^2/s (1e-4 converts from cm^2/s to m^2/s)
-D_ref = D
-# porosity = 0.2 #of anode
-# tort = 1.5 #tortuosity of anode
-# D_eff = D*porosity/tort #effective diffusion coefficient through combined effects of fluid and porous solid diffusion
+
 
 C = p/(R_gas*T_w) #density kg/m^3
 j0 = 1.2e4
@@ -84,6 +77,10 @@ beta1 = 1
 n=2
 k_boltz = 1.380649e-23;  # {J/K} Boltzmann Constant
 Re = rho*uAVG*2*R/mu
+
+BE = T_w/np.sqrt(epsA * epsB);                                                  # Binary Energy Ratio
+omega_AB = (0.4609*BE**2 + 33.2*BE + 37.6)/(BE**2 + 44.96*BE + 3.747);        # Collision Integral
+D_ref = D = 1e-4 * 0.0018583*(T_0**3*(1/M_A+1/M_B))**0.5 /(p_atm*sigma_AB**2*omega_AB) #reference diffusion coeff. based on reference temperature
 
 #dimensionless quantities
 a = k/(rho*C_p) #thermal diffusivity 
@@ -98,7 +95,7 @@ boundary_pts = 1500
 interior_pts = 2000
 
 #Adam Solver
-iter_Adam_initialize = 8000 #iterations of Adam before RAR
+iter_Adam_initialize = 5000 #iterations of Adam before RAR
 
 #Residual-based Adaptive Refinement
 iter_Adam_RAR = 1000 #iterations of Adam between RAR steps
@@ -107,7 +104,7 @@ gtol_RAR = 1e-7 #Residual to stop RAR
 pts_add = 100
 
 #LBFGS Solver
-maxiter_LBFGS = 3000 #max iterations to run LBFGS
+maxiter_LBFGS = 2000 #max iterations to run LBFGS
 gtol_LBFGS = 1e-8 
 #------------------------------------------
 
@@ -138,21 +135,30 @@ def physLoss(x,y):
     
     #p =64/Re*(L-z)/(4*R)*rho*uAVG**2 #gage pressure relative to exit of tube
 
-           
     X1 = y[:,0:1] #Mole fraction species 1, H2 (used)
     X2 = 1-X1   #Mole fraction species 2, H20 (produced)
     T = y[:,1:2] #Temperature out, non-dimensional
 
+    #re-dimensionalize T for diffusion calc
+    T_corr = T_0 + T*(T_w-T_0)
+
     M_mix = X1*M_A + X2*M_B #average molar mass
     M_mix_bar = M_mix/M_0
     Psi_1 = X1/M_mix_bar 
-    D_bar = 1 #assuming D constant
+
+
+    #Diffusion calculations
+    D = 1e-4 * 0.0018583*(T_corr**3*(1/M_A+1/M_B))**0.5 /(p_atm*sigma_AB**2*omega_AB)  # diffusion coefficient (inter species), m^2/s (1e-4 converts from cm^2/s to m^2/s)
+    D_bar = D/D_ref
+    # porosity = 0.2 #of anode
+    # tort = 1.5 #tortuosity of anode
+    # D_eff = D*porosity/tort #effective diffusion coefficient through combined effects of fluid and porous solid diffusion
 
 
     #---Compute All Derivatives (non-dimensional)---
     #FIRST DERIVATIVES
     #fluid
-    du_z_z = 0 
+    du_z_z = 0
     du_r_r = 0 
     du_r_z = 0
     du_z_r = -4*r/R**2 #non-dimensional (/uAVG)
@@ -160,20 +166,12 @@ def physLoss(x,y):
     #species
     dX1_z = dde.grad.jacobian(y,x,i=0,j=0)
     dX1_r = dde.grad.jacobian(y,x,i=0,j=1)
-
-    delta_M = M_A - M_B
-    M_mix = M_B + delta_M * X1
-
-    dPsi_dX = M_0 * M_B / M_mix**2
-    d2Psi_dX2 = -2 * M_0 * M_B * delta_M / M_mix**3
-    dPsi1_z = dPsi_dX * dX1_z
-    dPsi1_r = dPsi_dX * dX1_r
-
-
+    dPsi1_z = dde.grad.jacobian(Psi_1,x,i=0,j=0)
+    dPsi1_r = dde.grad.jacobian(Psi_1,x,i=0,j=1)
 
     #diffusion
-    dD_z = 0 #take to be cst
-    dD_r = 0 #take to be cst
+    dD_z = dde.grad.jacobian(D_bar,x,i=0,j=0)
+    dD_r = dde.grad.jacobian(D_bar,x,i=0,j=1)
    
     #temperature
     dT_z = dde.grad.jacobian(y,x,i=1,j=0)
@@ -184,8 +182,8 @@ def physLoss(x,y):
     #species
     dX1_zz = dde.grad.hessian(y, x, component=0, i=0, j=0)
     dX1_rr = dde.grad.hessian(y, x, component=0, i=1, j=1)
-    dPsi1_zz = dPsi_dX * dX1_zz + d2Psi_dX2 * dX1_z**2
-    dPsi1_rr = dPsi_dX * dX1_rr + d2Psi_dX2 * dX1_r**2
+    dPsi1_zz = dde.grad.hessian(Psi_1, x, component=0, i=0, j=0)
+    dPsi1_rr = dde.grad.hessian(Psi_1, x, component=0, i=1, j=1)
 
     #temperature
     dT_zz = dde.grad.hessian(y, x, component=1, i=0, j=0)
@@ -193,7 +191,8 @@ def physLoss(x,y):
   
     
 
-    #---Compute Losses--- (Navier Stokes, Non-Dimensionalized)
+    #---Compute Losses--- 
+    #Species transport and energy balance
     #No time transients
     #variables in following equations are assumed to be dimensionless, so additional notation is not applied 
   
