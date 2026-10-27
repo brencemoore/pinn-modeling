@@ -19,6 +19,7 @@ from matplotlib.colors import LogNorm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
+from datetime import datetime
 
 dde.config.set_default_float("float64")
 
@@ -334,7 +335,9 @@ model.train()
 # Save trained model to models/ folder
 os.makedirs("models", exist_ok=True)
 
-save_path = model.save("models/pinn_model")
+# Name includes model version and training date/time (DeepXDE appends -<step>.pt)
+timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+save_path = model.save(f"models/pinn_model_V2.2_{timestamp}")
 
 # Prints exact file name for saved model
 print("Saved model: ")

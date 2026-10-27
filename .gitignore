@@ -222,5 +222,8 @@ __marimo__/
 
 plots/*
 
-training_display.py
-FuelCellPINN_V1,3_RAR_training_display.py
+# training_display.py
+# FuelCellPINN_V1,3_RAR_training_display.py
+
+# Claude Code instructions (local only)
+CLAUDE.md
