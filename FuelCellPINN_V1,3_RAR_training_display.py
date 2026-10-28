@@ -16,10 +16,10 @@ from matplotlib.colors import LogNorm
 import pandas as pd
 from datetime import datetime
 from pinn_utils import TrainingLog, model_directory
-from plot_pinn_model import plot_after_training
+from plot_pinn_model import plot_after_training, OUTPUT_DIRECTORY as PLOT_DIRECTORY
 
 # Experimental custom training (quality of life)
-from training_display import TrainingProgress
+from training_display import TrainingProgress, LiveLossPlot
 
 #GPU check
 print("PyTorch version:", torch.__version__)
@@ -59,6 +59,9 @@ pts_add = 300
 #LBFGS Solver
 maxiter_LBFGS = 5000 #max iterations to run LBFGS
 gtol_LBFGS = 1e-8 #residual to stop LBFGS and end all training
+
+#Training display
+display_every_Adam = 100 #Adam iterations between loss updates (terminal and live plot)
 #------------------------------------------
 
 #2) FORMAT GEOMETRY
@@ -222,15 +225,28 @@ plt.pause(0.001)
 
 # EXPERIMENTAL TRAINING DISPLAY
 training_log = TrainingLog(model)  # records loss history and training time
+
+# Live loss plots for the whole run (one window for total/PDE/BC, one for every term)
+live_plot = LiveLossPlot(
+    term_names=["lossZmom", "lossRmom", "lossCont",
+                "bc_top_uz", "bc_top_ur", "bc_axis_ur", "bc_axis_uz",
+                "bc_axis_p", "bc_left_uz", "bc_left_ur", "bc_right_p"],
+    num_pde_terms=3,
+    title="V1.3_exp",
+)
+
 with training_log.stage("Adam (initial)"):
     model.train(
         iterations=iter_Adam_initialize,
+        display_every=display_every_Adam,
         callbacks=[
             TrainingProgress(
                 optimizer="Adam",
                 total_iterations=iter_Adam_initialize,
-                stage="Initial"
-            )
+                stage="Initial",
+                display_every=display_every_Adam
+            ),
+            live_plot.stage("Initial")
         ]
     )
 
@@ -295,12 +311,15 @@ for i in range(max_rar_iterations):
     with training_log.stage(f"Adam (RAR {i + 1})"):
         model.train(
             iterations=iter_Adam_RAR,
+            display_every=display_every_Adam,
             callbacks=[
                 TrainingProgress(
                     optimizer="Adam",
                     total_iterations=iter_Adam_RAR,
-                    stage=f"RAR {i + 1}"
-                )
+                    stage=f"RAR {i + 1}",
+                    display_every=display_every_Adam
+                ),
+                live_plot.stage(f"RAR {i + 1}")
             ]
         )
 
@@ -319,7 +338,8 @@ with training_log.stage("L-BFGS"):
                 optimizer="L-BFGS",
                 total_iterations=maxiter_LBFGS,
                 stage="Fine-tune"
-            )
+            ),
+            live_plot.stage("L-BFGS")
         ]
     )
 
@@ -338,6 +358,9 @@ print(save_path)
 
 # Save loss history and training time next to the model, then save its plots
 training_log.save(save_path)
+model_name = os.path.splitext(os.path.basename(save_path))[0]
+for path in live_plot.save(PLOT_DIRECTORY / model_name):
+    print("Saved live loss plot:", path)
 plot_after_training(save_path)
 
 

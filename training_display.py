@@ -1,6 +1,10 @@
 import sys
 import time
+from pathlib import Path
+
 import deepxde as dde
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def _supports(text):
@@ -162,3 +166,111 @@ class TrainingProgress(dde.callbacks.Callback):
         if hours:
             return f"{hours}:{minutes:02d}:{secs:02d}"
         return f"{minutes:02d}:{secs:02d}"
+
+
+class LiveLossPlot(dde.callbacks.Callback):
+    """Live loss plots for model.train(), in two windows:
+
+      summary   total, PDE, and boundary-condition loss
+      terms     every loss term
+
+    Use one instance for every model.train() call so the plots cover the whole
+    run, and call stage(name) in the callbacks list to label each call. Like
+    TrainingProgress it is read-only, so training results are unchanged.
+
+    The plots redraw whenever DeepXDE records a new loss: every `display_every`
+    steps for Adam (pass display_every to model.train()), and after every
+    L-BFGS chunk of up to 1000 iterations.
+    """
+
+    FILE_NAMES = ("live_loss_summary.png", "live_loss_terms.png")
+
+    def __init__(self, term_names, num_pde_terms, title="Training loss"):
+        super().__init__()
+        self.term_names = list(term_names)
+        self.num_pde_terms = num_pde_terms
+        self.title = title
+
+        self.next_stage = None
+        self.stage_starts = []  # (step, name) for each model.train() call
+        self.points_drawn = 0
+        self.summary_fig = self.terms_fig = None
+
+    def stage(self, name):
+        """Label the next model.train() call; returns self for the callbacks list."""
+        self.next_stage = name
+        return self
+
+    def on_train_begin(self):
+        if self.summary_fig is None:
+            self.summary_fig, _ = plt.subplots(figsize=(9, 5))
+            self.terms_fig, _ = plt.subplots(figsize=(11, 6))
+            plt.show(block=False)
+        name = self.next_stage or self.model.opt_name
+        self.stage_starts.append((self.model.train_state.step, name))
+        self.next_stage = None
+        self._redraw(force=True)
+
+    def on_epoch_end(self):
+        self._redraw()
+
+    def on_train_end(self):
+        self._redraw(force=True)
+
+    def save(self, output_dir):
+        """Save both plots to output_dir, close their windows, and return the paths."""
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        paths = []
+        for fig, name in zip((self.summary_fig, self.terms_fig), self.FILE_NAMES):
+            if fig is None:
+                continue
+            fig.savefig(output_dir / name, dpi=160, bbox_inches="tight")
+            plt.close(fig)
+            paths.append(output_dir / name)
+        self.summary_fig = self.terms_fig = None
+        return paths
+
+    def _redraw(self, force=False):
+        # losshistory gets a new row only when DeepXDE recomputes the loss
+        history = self.model.losshistory
+        if not history.steps or (not force and len(history.steps) == self.points_drawn):
+            return
+        self.points_drawn = len(history.steps)
+
+        steps = np.array(history.steps)
+        losses = np.vstack(history.loss_train)  # already multiplied by loss_weights
+        names = self.term_names if len(self.term_names) == losses.shape[1] else [
+            f"term {i}" for i in range(losses.shape[1])]
+
+        ax = self.summary_fig.axes[0]
+        ax.clear()
+        ax.plot(steps, losses.sum(axis=1), color="black", linewidth=2, label="total")
+        ax.plot(steps, losses[:, :self.num_pde_terms].sum(axis=1), linewidth=1.2, label="PDE")
+        ax.plot(steps, losses[:, self.num_pde_terms:].sum(axis=1), linewidth=1.2, label="boundary conditions")
+        self._format(ax, "summary", fontsize=9)
+
+        ax = self.terms_fig.axes[0]
+        ax.clear()
+        colors = plt.cm.tab20(np.linspace(0, 1, max(len(names), 2)))
+        for i, name in enumerate(names):
+            style = "-" if i < self.num_pde_terms else "--"
+            ax.plot(steps, losses[:, i], style, color=colors[i], linewidth=1, label=name)
+        self._format(ax, "every term", fontsize=7, ncol=2)
+
+        for fig in (self.summary_fig, self.terms_fig):
+            fig.tight_layout()
+            fig.canvas.draw_idle()
+            fig.canvas.flush_events()
+
+    def _format(self, ax, kind, fontsize, ncol=1):
+        for step, name in self.stage_starts:
+            ax.axvline(step, color="gray", linewidth=0.8, linestyle="--")
+            ax.text(step, 1.01, name, rotation=90, fontsize=7, va="bottom",
+                    transform=ax.get_xaxis_transform())
+        ax.set_yscale("log")
+        ax.set_xlabel("Training step")
+        ax.set_ylabel("Training loss (as weighted during training)")
+        ax.set_title(f"{self.title}: {kind} (step {self.model.train_state.step})", pad=55)
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=fontsize, ncol=ncol, loc="upper right")
