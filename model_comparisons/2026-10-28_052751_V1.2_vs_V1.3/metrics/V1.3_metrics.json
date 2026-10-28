@@ -1,0 +1,200 @@
+{
+  "label": "V1.3",
+  "model": {
+    "checkpoint": "models\\pinn_model_V1.3_2026-10-28_0238-13059.pt",
+    "script": "FuelCellPINN_V1,3_RAR.py",
+    "version": "V1.3",
+    "trained": "2026-10-28 02:38",
+    "step": 13059,
+    "layer_size": [
+      2,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      3
+    ],
+    "parameters": 4833,
+    "dtype": "float32",
+    "lbfgs_iterations": 2060,
+    "outputs": [
+      "u_z",
+      "u_r",
+      "p"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        13.333333015441895,
+        1.0
+      ]
+    ],
+    "equations": [
+      "lossZmom",
+      "lossRmom",
+      "lossCont"
+    ],
+    "boundary_conditions": [
+      "bc_top_uz",
+      "bc_top_ur",
+      "bc_axis_ur",
+      "bc_axis_uz",
+      "bc_axis_p",
+      "bc_left_uz",
+      "bc_left_ur",
+      "bc_right_p"
+    ]
+  },
+  "accuracy": {
+    "training_objective": 0.003934789935148583,
+    "loss_weights": [
+      10,
+      10,
+      10,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "mean_pde_rmse": 0.0007228576572462303,
+    "pde_residuals": {
+      "lossZmom": {
+        "rmse": 0.0007780386845978581,
+        "mse": 6.053441947307654e-07,
+        "mae": 0.0005228360235776563,
+        "max_abs": 0.040157318115234375,
+        "points": 10000
+      },
+      "lossRmom": {
+        "rmse": 0.00048566238684923834,
+        "mse": 2.3586795400009926e-07,
+        "mae": 0.0002827999801752192,
+        "max_abs": 0.027668118476867676,
+        "points": 10000
+      },
+      "lossCont": {
+        "rmse": 0.0009048719002915943,
+        "mse": 8.18793155937321e-07,
+        "mae": 0.0004394222511008593,
+        "max_abs": 0.06498738378286362,
+        "points": 10000
+      }
+    },
+    "boundary_errors": {
+      "bc_top_uz": {
+        "rmse": 0.0010627807433991083,
+        "mse": 1.1295029085399612e-06,
+        "mae": 0.0004725368784274906,
+        "max_abs": 0.01662527024745941,
+        "points": 1000
+      },
+      "bc_top_ur": {
+        "rmse": 0.0008801814582673262,
+        "mse": 7.747193994775969e-07,
+        "mae": 0.0006625430285930634,
+        "max_abs": 0.00807294249534607,
+        "points": 1000
+      },
+      "bc_axis_ur": {
+        "rmse": 0.0005578013418564192,
+        "mse": 3.111423369768218e-07,
+        "mae": 0.0003313015997409821,
+        "max_abs": 0.003900766372680664,
+        "points": 1000
+      },
+      "bc_axis_uz": {
+        "rmse": 0.0007608208369572334,
+        "mse": 5.788483459483051e-07,
+        "mae": 0.000345529515416672,
+        "max_abs": 0.004162960220128298,
+        "points": 1000
+      },
+      "bc_axis_p": {
+        "rmse": 0.0006429249592240816,
+        "mse": 4.1335250319328694e-07,
+        "mae": 0.0003606160309470852,
+        "max_abs": 0.009006921201944351,
+        "points": 1000
+      },
+      "bc_left_uz": {
+        "rmse": 0.06096162512464478,
+        "mse": 0.003716319737837722,
+        "mae": 0.007359368920326233,
+        "max_abs": 0.9399605989456177,
+        "points": 1000
+      },
+      "bc_left_ur": {
+        "rmse": 0.014093575076968776,
+        "mse": 0.00019862885845015543,
+        "mae": 0.003360390976071358,
+        "max_abs": 0.15118667483329773,
+        "points": 1000
+      },
+      "bc_right_p": {
+        "rmse": 0.0001836309339067487,
+        "mse": 3.3720319887464714e-08,
+        "mae": 0.00016696804761886597,
+        "max_abs": 0.00029790401458740234,
+        "points": 1000
+      }
+    }
+  },
+  "cost": {
+    "parameters": 4833,
+    "forward_flops_per_point": 9300,
+    "training_steps": 13059,
+    "lbfgs_iterations": 2060,
+    "training_seconds": 3478.8356580003165,
+    "residual_ms_per_1000_points": 8.053439995273948,
+    "inference_timing": [
+      {
+        "batch_size": 1,
+        "median_ms": 2.098199911415577,
+        "p95_ms": 2.330270071979612,
+        "points_per_second": 476.5990097317931
+      },
+      {
+        "batch_size": 100,
+        "median_ms": 2.299700048752129,
+        "p95_ms": 2.9337300220504394,
+        "points_per_second": 43483.931765041416
+      },
+      {
+        "batch_size": 1000,
+        "median_ms": 2.4443999864161015,
+        "p95_ms": 4.237659950740634,
+        "points_per_second": 409098.3495160982
+      },
+      {
+        "batch_size": 10000,
+        "median_ms": 2.406099927611649,
+        "p95_ms": 3.164490009658038,
+        "points_per_second": 4156103.3626422295
+      },
+      {
+        "batch_size": 40000,
+        "median_ms": 9.5017000567168,
+        "p95_ms": 13.560230005532498,
+        "points_per_second": 4209772.962862977
+      }
+    ]
+  },
+  "predictions_finite": true,
+  "runtime": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.12.0+cu126",
+    "deepxde": "1.15.0",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU"
+  }
+}
