@@ -7,7 +7,7 @@ This script never trains a model. Both checkpoints must already exist in the
 models/<version>/ folders; if either is missing (or both point to the same file)
 the script lists the available checkpoints and exits.
 
-Each run is saved to model_comparisons/<date_time>_<A>_vs_<B>/:
+Each run is saved to model_comparisons/<A>_vs_<B>_<date_time>/:
   plots/      comparison figures
   metrics/    per-model metrics and predictions, and model_comparison.json
   README.md   which two checkpoints were compared, and when
@@ -59,7 +59,7 @@ MODEL_B_LABEL = "V1.3_exp"
 MODEL_A_SCRIPT = None
 MODEL_B_SCRIPT = None
 
-# Each run gets its own folder: model_comparisons/<date_time>_<A>_vs_<B>/
+# Each run gets its own folder: model_comparisons/<A>_vs_<B>_<date_time>/
 OUTPUT_DIRECTORY = Path("model_comparisons")
 VALIDATION_POINTS = 10000
 BOUNDARY_SAMPLES = 1000      # points sampled along each edge of the domain
@@ -487,7 +487,7 @@ def main() -> None:
 
     run_time = datetime.now()
     output_dir = OUTPUT_DIRECTORY / (
-        f"{run_time:%Y-%m-%d_%H%M%S}_{pu.safe_name(MODEL_A_LABEL)}_vs_{pu.safe_name(MODEL_B_LABEL)}"
+        f"{pu.safe_name(MODEL_A_LABEL)}_vs_{pu.safe_name(MODEL_B_LABEL)}_{run_time:%Y-%m-%d_%H%M%S}"
     )
     plots_dir = output_dir / "plots"
     metrics_dir = output_dir / "metrics"
