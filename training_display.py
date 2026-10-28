@@ -28,10 +28,15 @@ class TrainingProgress(dde.callbacks.Callback):
     DeepXDE only recomputes the training loss when it prints a row of its loss
     table (every `display_every` steps for Adam, every L-BFGS chunk), so the
     loss shown here is the most recent table value and the step it came from.
+
+    For a cleaner terminal, call model.train(..., verbose=0) to hide DeepXDE's
+    loss table and pass deepxde_prints=False. With num_pde_terms set, a short
+    PDE / boundary-condition loss split is printed when each stage ends.
     """
 
     def __init__(self, optimizer, total_iterations=None, stage="",
-                 display_every=1000, refresh_seconds=0.1):
+                 display_every=1000, refresh_seconds=0.1,
+                 num_pde_terms=None, deepxde_prints=True):
         super().__init__()
 
         self.optimizer = optimizer
@@ -40,6 +45,9 @@ class TrainingProgress(dde.callbacks.Callback):
         # Must match the display_every passed to model.train() (DeepXDE default 1000)
         self.display_every = display_every
         self.refresh_seconds = refresh_seconds
+        self.num_pde_terms = num_pde_terms
+        # Must be False when model.train() is called with verbose=0
+        self.deepxde_prints = deepxde_prints
 
         self.start_time = None
         self.start_iteration = None
@@ -84,12 +92,19 @@ class TrainingProgress(dde.callbacks.Callback):
         # Leave the final progress line in place for this stage
         self._draw(time.time())
         print()
+        if self.num_pde_terms is not None and self.loss_source is not None:
+            loss = np.asarray(self.loss_source, dtype=float)
+            pde = loss[:self.num_pde_terms].sum()
+            bc = loss[self.num_pde_terms:].sum()
+            print(f"{'':<6}   {'':<10}   PDE loss {pde:.2e} | BC loss {bc:.2e}")
 
     def _iteration(self):
         # Iteration relative to the beginning of THIS training session
         return self.model.train_state.step - self.start_iteration
 
     def _deepxde_will_print(self):
+        if not self.deepxde_prints:
+            return False
         if self.model.opt_name.startswith("L-BFGS"):
             # PyTorch L-BFGS prints a row after every chunk of iterations
             return True
