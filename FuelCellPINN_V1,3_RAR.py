@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import pandas as pd
 from datetime import datetime
-from pinn_utils import TrainingLog
+from pinn_utils import TrainingLog, model_directory
 from plot_pinn_model import plot_after_training
 
 #GPU check
@@ -287,12 +287,13 @@ with training_log.stage("L-BFGS"):
     model.train()
 
 
-# Save trained model to models/ folder
-os.makedirs("models", exist_ok=True)
+# Save trained model to models/v1.3/ folder
+model_dir = model_directory("V1.3")
+os.makedirs(model_dir, exist_ok=True)
 
 # Name includes model version and training date/time (DeepXDE appends -<step>.pt)
 timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
-save_path = model.save(f"models/pinn_model_V1.3_{timestamp}")
+save_path = model.save(f"{model_dir}/pinn_model_V1.3_{timestamp}")
 
 # Prints exact file name for saved model
 print("Saved model: ")

@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 from datetime import datetime
-from pinn_utils import TrainingLog
+from pinn_utils import TrainingLog, model_directory
 from plot_pinn_model import plot_after_training
 
 dde.config.set_default_float("float64")
@@ -341,12 +341,13 @@ with training_log.stage("L-BFGS"):
     model.train()
 
 
-# Save trained model to models/ folder
-os.makedirs("models", exist_ok=True)
+# Save trained model to models/v2.2/ folder
+model_dir = model_directory("V2.2")
+os.makedirs(model_dir, exist_ok=True)
 
 # Name includes model version and training date/time (DeepXDE appends -<step>.pt)
 timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
-save_path = model.save(f"models/pinn_model_V2.2_{timestamp}")
+save_path = model.save(f"{model_dir}/pinn_model_V2.2_{timestamp}")
 
 # Prints exact file name for saved model
 print("Saved model: ")

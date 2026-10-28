@@ -4,8 +4,13 @@ Edit the configuration variables below, then run this file in the
 pinn-modeling conda environment.
 
 This script never trains a model. Both checkpoints must already exist in the
-models/ folder; if either is missing (or both point to the same file) the script
-lists the available checkpoints and exits.
+models/<version>/ folders; if either is missing (or both point to the same file)
+the script lists the available checkpoints and exits.
+
+Each run is saved to model_comparisons/<date_time>_<A>_vs_<B>/:
+  plots/      comparison figures
+  metrics/    per-model metrics and predictions, and model_comparison.json
+  README.md   which two checkpoints were compared, and when
 
 The physics of each model is read from that model's own training script (see
 pinn_utils.py), so the comparison stays in sync with the training code. To
@@ -44,18 +49,18 @@ import pinn_utils as pu
 # User configuration: edit these before running the script.
 # Paths are relative to the project root (the working directory in VS Code).
 # ---------------------------------------------------------------------------
-MODEL_A_PATH = Path("models/pinn_model_V1.3-12689.pt")
-MODEL_B_PATH = Path("models/pinn_model_V1.3-12661.pt")
-MODEL_A_LABEL = "original"
-MODEL_B_LABEL = "experimental"
+MODEL_A_PATH = Path("models/v1.3/pinn_model_V1.3_2026-10-28_0238-13059.pt")
+MODEL_B_PATH = Path("models/v1.3_exp/pinn_model_V1.3_exp_2026-10-28_0342-13059.pt")
+MODEL_A_LABEL = "V1.3"
+MODEL_B_LABEL = "V1.3_exp"
 
 # Set to a script path to skip the automatic lookup (needed for older
 # checkpoints saved without a version, e.g. pinn_model-10000.pt)
 MODEL_A_SCRIPT = None
 MODEL_B_SCRIPT = None
 
-# Each run gets its own folder: metrics/model_comparisons/<date_time>_<A>_vs_<B>/
-OUTPUT_DIRECTORY = Path("metrics/model_comparisons")
+# Each run gets its own folder: model_comparisons/<date_time>_<A>_vs_<B>/
+OUTPUT_DIRECTORY = Path("model_comparisons")
 VALIDATION_POINTS = 10000
 BOUNDARY_SAMPLES = 1000      # points sampled along each edge of the domain
 GRID_SIZE = 200
@@ -84,7 +89,7 @@ def require_two_checkpoints() -> tuple[Path, Path]:
         for problem in problems:
             print(f"  - {problem}")
         available = pu.available_checkpoints()
-        print("\nAvailable checkpoints in models/ (oldest first):")
+        print("\nAvailable checkpoints in models/<version>/ (oldest first):")
         for path in available:
             print(f"  {path}")
         if not available:
@@ -465,7 +470,7 @@ def write_run_summary(path: Path, run_time: datetime, result_a: dict[str, Any],
     lines = ["# Model Comparison", "", f"- Run: {run_time:%Y-%m-%d %H:%M:%S}"]
     for name, result in (("A", result_a), ("B", result_b)):
         model = result["model"]
-        lines.append(f"- Model {name} ({result['label']}): `{Path(model['checkpoint']).name}` "
+        lines.append(f"- Model {name} ({result['label']}): `{Path(model['checkpoint']).as_posix()}` "
                      f"(physics: `{Path(model['script']).name}`)")
     lines.append(f"- Same physics: {'yes' if physics_match else 'no'}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -485,7 +490,9 @@ def main() -> None:
         f"{run_time:%Y-%m-%d_%H%M%S}_{pu.safe_name(MODEL_A_LABEL)}_vs_{pu.safe_name(MODEL_B_LABEL)}"
     )
     plots_dir = output_dir / "plots"
+    metrics_dir = output_dir / "metrics"
     plots_dir.mkdir(parents=True, exist_ok=True)
+    metrics_dir.mkdir(parents=True, exist_ok=True)
 
     device = pu.default_device()
     print("PINN pretrained-model comparison (no training is performed)")
@@ -514,9 +521,9 @@ def main() -> None:
     }
     for result, arrays in ((result_a, arrays_a), (result_b, arrays_b)):
         safe_label = pu.safe_name(result["label"])
-        (output_dir / f"{safe_label}_metrics.json").write_text(
+        (metrics_dir / f"{safe_label}_metrics.json").write_text(
             json.dumps({**result, "runtime": runtime}, indent=2), encoding="utf-8")
-        np.savez_compressed(output_dir / f"{safe_label}_predictions.npz", **arrays)
+        np.savez_compressed(metrics_dir / f"{safe_label}_predictions.npz", **arrays)
 
     comparison = {
         "model_a": result_a["model"],
@@ -535,7 +542,7 @@ def main() -> None:
             "Timing depends on hardware and system load.",
         ],
     }
-    (output_dir / "model_comparison.json").write_text(json.dumps(comparison, indent=2), encoding="utf-8")
+    (metrics_dir / "model_comparison.json").write_text(json.dumps(comparison, indent=2), encoding="utf-8")
 
     plot_paths = [
         plot_metrics(result_a, result_b, plots_dir),

@@ -43,6 +43,9 @@ MODEL_SCRIPTS = {
     "V3": "FuelCellPINN_V3.py",
 }
 
+# Trained models are saved in one subfolder per version, e.g. models/v3/
+MODELS_DIRECTORY = Path("models")
+
 # Matches the save format pinn_model_<version>_<YYYY-MM-DD>_<HHMM>-<step>.pt
 # (older checkpoints without a version or timestamp also match)
 CHECKPOINT_NAME = re.compile(
@@ -71,9 +74,14 @@ def resolve_checkpoint(path: Path) -> Path | None:
     return None
 
 
+def model_directory(version: str | None) -> Path:
+    """Folder for one model version: "V3" -> models/v3/, no version -> models/unversioned/."""
+    return MODELS_DIRECTORY / (version.lower() if version else "unversioned")
+
+
 def available_checkpoints() -> list[Path]:
-    """Checkpoints in models/, oldest first."""
-    return sorted(Path("models").glob("*.pt"), key=lambda p: p.stat().st_mtime)
+    """Checkpoints in models/ and its version subfolders, oldest first."""
+    return sorted(MODELS_DIRECTORY.rglob("*.pt"), key=lambda p: p.stat().st_mtime)
 
 
 def parse_checkpoint_name(path: Path) -> dict[str, Any]:
@@ -362,7 +370,7 @@ def safe_name(text: str) -> str:
 # Training record (loss history and training time)
 # ---------------------------------------------------------------------------
 def training_record_path(checkpoint: Path) -> Path:
-    """models/pinn_model_V3_<ts>-<step>.pt -> models/pinn_model_V3_<ts>-<step>_training.json"""
+    """models/v3/pinn_model_V3_<ts>-<step>.pt -> models/v3/pinn_model_V3_<ts>-<step>_training.json"""
     checkpoint = Path(checkpoint)
     return checkpoint.with_name(f"{checkpoint.stem}_training.json")
 

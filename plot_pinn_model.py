@@ -39,7 +39,7 @@ import pinn_utils as pu
 # User configuration: edit these before running the script.
 # Paths are relative to the project root (the working directory in VS Code).
 # ---------------------------------------------------------------------------
-MODEL_PATH = Path("models/pinn_model_V3_2026-10-27_2139-11000.pt")
+MODEL_PATH = Path("models/v3/pinn_model_V3_2026-10-28_0526-7000.pt")
 # Set to a script path to skip the automatic lookup (needed for older
 # checkpoints saved without a version, e.g. pinn_model-10000.pt)
 MODEL_SCRIPT = None
@@ -354,7 +354,7 @@ def plot_after_training(checkpoint: str | Path) -> None:
 def main() -> None:
     checkpoint = pu.resolve_checkpoint(MODEL_PATH)
     if checkpoint is None:
-        print(f"Checkpoint not found: {MODEL_PATH}\n\nAvailable checkpoints in models/ (oldest first):")
+        print(f"Checkpoint not found: {MODEL_PATH}\n\nAvailable checkpoints in models/<version>/ (oldest first):")
         for path in pu.available_checkpoints():
             print(f"  {path}")
         sys.exit(1)
