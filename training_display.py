@@ -269,8 +269,7 @@ class TrainingProgress(dde.callbacks.Callback):
         if not self.interactive:
             # Not a terminal (log file, pipe): \r is not understood, so print
             # a full line every log_seconds and when the stage finishes
-            finished = (self.total_iterations is not None
-                        and iteration >= self.total_iterations)
+            finished = iteration == self.total_iterations
             if now - self.last_log >= self.log_seconds or finished or self.last_log == 0.0:
                 if iteration != self.last_logged_iteration or self.last_log == 0.0:
                     print(line, flush=True)
