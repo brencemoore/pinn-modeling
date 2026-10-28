@@ -1,0 +1,143 @@
+{
+  "label": "V2.2",
+  "model": {
+    "checkpoint": "models\\pinn_model_V2.2_2026-10-28_0429-10000.pt",
+    "script": "FuelCellPINN_V2,2.py",
+    "version": "V2.2",
+    "trained": "2026-10-28 04:29",
+    "step": 10000,
+    "layer_size": [
+      2,
+      20,
+      20,
+      20,
+      20,
+      20,
+      1
+    ],
+    "parameters": 1761,
+    "dtype": "float64",
+    "lbfgs_iterations": 2000,
+    "outputs": [
+      "X1"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.075
+      ]
+    ],
+    "equations": [
+      "lossSpec"
+    ],
+    "boundary_conditions": [
+      "bc_wall_X1",
+      "bc_axis_X1",
+      "bc_left_X1",
+      "bc_right_X1"
+    ]
+  },
+  "accuracy": {
+    "training_objective": 0.0013203824617710716,
+    "loss_weights": [
+      10,
+      5000,
+      1,
+      20,
+      1
+    ],
+    "mean_pde_rmse": 0.007657517917699143,
+    "pde_residuals": {
+      "lossSpec": {
+        "rmse": 0.007657517917699143,
+        "mse": 5.863758065988342e-05,
+        "mae": 0.0059581928271478886,
+        "max_abs": 0.04617498166472103,
+        "points": 10000
+      }
+    },
+    "boundary_errors": {
+      "bc_wall_X1": {
+        "rmse": 6.37680348375592e-05,
+        "mse": 4.066362267044165e-09,
+        "mae": 5.2602939402055014e-05,
+        "max_abs": 0.00023191333437952433,
+        "points": 1000
+      },
+      "bc_axis_X1": {
+        "rmse": 0.004394409338425842,
+        "mse": 1.931083343364425e-05,
+        "mae": 0.0036710536616371423,
+        "max_abs": 0.01768070516379042,
+        "points": 1000
+      },
+      "bc_left_X1": {
+        "rmse": 0.005617990202799929,
+        "mse": 3.156181391875599e-05,
+        "mae": 0.004417045935518089,
+        "max_abs": 0.01948727539661621,
+        "points": 1000
+      },
+      "bc_right_X1": {
+        "rmse": 0.00794529622029616,
+        "mse": 6.312773202825245e-05,
+        "mae": 0.007929957201863517,
+        "max_abs": 0.00837926951398354,
+        "points": 1000
+      }
+    }
+  },
+  "cost": {
+    "parameters": 1761,
+    "forward_flops_per_point": 3320,
+    "training_steps": 10000,
+    "lbfgs_iterations": 2000,
+    "training_seconds": 2745.7546649998985,
+    "residual_ms_per_1000_points": 6.060179998166859,
+    "inference_timing": [
+      {
+        "batch_size": 1,
+        "median_ms": 2.7574999257922173,
+        "p95_ms": 4.080689942929893,
+        "points_per_second": 362.64733523526917
+      },
+      {
+        "batch_size": 100,
+        "median_ms": 2.7084999019280076,
+        "p95_ms": 3.7066699704155313,
+        "points_per_second": 36920.80621041057
+      },
+      {
+        "batch_size": 1000,
+        "median_ms": 3.5548999439924955,
+        "p95_ms": 4.309250030200927,
+        "points_per_second": 281301.8694632805
+      },
+      {
+        "batch_size": 10000,
+        "median_ms": 4.7426000237464905,
+        "p95_ms": 5.520230007823556,
+        "points_per_second": 2108548.0432525165
+      },
+      {
+        "batch_size": 40000,
+        "median_ms": 15.362899983301759,
+        "p95_ms": 16.2083700299263,
+        "points_per_second": 2603675.0902158315
+      }
+    ]
+  },
+  "predictions_finite": true,
+  "runtime": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.12.0+cu126",
+    "deepxde": "1.15.0",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU"
+  }
+}

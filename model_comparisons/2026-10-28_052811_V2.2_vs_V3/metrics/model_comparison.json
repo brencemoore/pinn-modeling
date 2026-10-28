@@ -1,0 +1,213 @@
+{
+  "model_a": {
+    "checkpoint": "models\\pinn_model_V2.2_2026-10-28_0429-10000.pt",
+    "script": "FuelCellPINN_V2,2.py",
+    "version": "V2.2",
+    "trained": "2026-10-28 04:29",
+    "step": 10000,
+    "layer_size": [
+      2,
+      20,
+      20,
+      20,
+      20,
+      20,
+      1
+    ],
+    "parameters": 1761,
+    "dtype": "float64",
+    "lbfgs_iterations": 2000,
+    "outputs": [
+      "X1"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.075
+      ]
+    ],
+    "equations": [
+      "lossSpec"
+    ],
+    "boundary_conditions": [
+      "bc_wall_X1",
+      "bc_axis_X1",
+      "bc_left_X1",
+      "bc_right_X1"
+    ]
+  },
+  "model_b": {
+    "checkpoint": "models\\pinn_model_V3_2026-10-28_0526-7000.pt",
+    "script": "FuelCellPINN_V3.py",
+    "version": "V3",
+    "trained": "2026-10-28 05:26",
+    "step": 7000,
+    "layer_size": [
+      2,
+      20,
+      20,
+      20,
+      20,
+      20,
+      2
+    ],
+    "parameters": 1782,
+    "dtype": "float64",
+    "lbfgs_iterations": 2000,
+    "outputs": [
+      "X1",
+      "T"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0
+      ]
+    ],
+    "equations": [
+      "lossSpec",
+      "lossEnergy"
+    ],
+    "boundary_conditions": [
+      "bc_wall_X1",
+      "bc_axis_X1",
+      "bc_left_X1",
+      "bc_right_X1",
+      "bc_wall_T",
+      "bc_axis_T",
+      "bc_left_T",
+      "bc_right_T"
+    ]
+  },
+  "same_physics": false,
+  "summary_lower_is_better": [
+    {
+      "kind": "accuracy",
+      "metric": "Training objective (weighted loss)",
+      "a": 0.0013203824617710716,
+      "b": 0.0022468461931961898,
+      "change_percent": 70.16631606742357,
+      "better": "A"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "Mean PDE residual RMSE",
+      "a": 0.007657517917699143,
+      "b": 0.019720526259302925,
+      "change_percent": 157.53157186510845,
+      "better": "A"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "PDE lossSpec RMSE",
+      "a": 0.007657517917699143,
+      "b": 0.01159456892809185,
+      "change_percent": 51.41419259748429,
+      "better": "A"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_wall_X1 RMSE",
+      "a": 6.37680348375592e-05,
+      "b": 0.005263649632140115,
+      "change_percent": 8154.370148850563,
+      "better": "A"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_axis_X1 RMSE",
+      "a": 0.004394409338425842,
+      "b": 0.0019719637561365303,
+      "change_percent": -55.12562430420003,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_left_X1 RMSE",
+      "a": 0.005617990202799929,
+      "b": 0.0017294020046324965,
+      "change_percent": -69.21671376766399,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_right_X1 RMSE",
+      "a": 0.00794529622029616,
+      "b": 0.014314331478987679,
+      "change_percent": 80.16107999122671,
+      "better": "A"
+    },
+    {
+      "kind": "cost",
+      "metric": "Parameters",
+      "a": 1761,
+      "b": 1782,
+      "change_percent": 1.192504258943782,
+      "better": "A"
+    },
+    {
+      "kind": "cost",
+      "metric": "Forward FLOPs per point",
+      "a": 3320,
+      "b": 3360,
+      "change_percent": 1.2048192771084338,
+      "better": "A"
+    },
+    {
+      "kind": "cost",
+      "metric": "PDE residual ms per 1k points",
+      "a": 6.060179998166859,
+      "b": 12.567129998933524,
+      "change_percent": 107.37222331242553,
+      "better": "A"
+    },
+    {
+      "kind": "cost",
+      "metric": "Inference ms (n=40,000 vs 40,000)",
+      "a": 15.362899983301759,
+      "b": 12.073099962435663,
+      "change_percent": -21.41392591530144,
+      "better": "B"
+    },
+    {
+      "kind": "cost",
+      "metric": "Training steps",
+      "a": 10000,
+      "b": 7000,
+      "change_percent": -30.0,
+      "better": "B"
+    },
+    {
+      "kind": "cost",
+      "metric": "Training time (s)",
+      "a": 2745.7546649998985,
+      "b": 3331.2387509000255,
+      "change_percent": 21.323248335449833,
+      "better": "A"
+    }
+  ],
+  "validation_prediction_differences_b_minus_a": {},
+  "grid_prediction_differences_b_minus_a": {},
+  "runtime": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.12.0+cu126",
+    "deepxde": "1.15.0",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU"
+  },
+  "notes": [
+    "Accuracy metrics measure consistency with each model's own encoded equations and boundary conditions, not agreement with a trusted reference solution.",
+    "When the models solve different physics, only computation cost is directly comparable.",
+    "Training time is only available for checkpoints with a training record (<checkpoint>_training.json).",
+    "Timing depends on hardware and system load."
+  ]
+}
