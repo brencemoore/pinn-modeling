@@ -22,6 +22,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 from datetime import datetime
+from pinn_utils import TrainingLog
+from plot_pinn_model import plot_after_training
 
 dde.config.set_default_float("float64")
 
@@ -313,7 +315,9 @@ y_coords = x_train[:, 1]
 
 
 
-model.train(iterations=iter_Adam_initialize) #Adam iterations before RAR
+training_log = TrainingLog(model)  # records loss history and training time
+with training_log.stage("Adam (initial)"):
+    model.train(iterations=iter_Adam_initialize) #Adam iterations before RAR
 
 # 8). Residual-based Adaptive Refinement W/ Adam
 
@@ -352,9 +356,11 @@ for i in range(max_rar_iterations):
     
     # 7. Inject the worst performing points directly into the active training pool
     model.data.add_anchors(new_points)
+    training_log.add_rar_points(new_points, rar_round=i + 1)
     
     # 8. Retrain the network with the newly added constraints
-    model.train(iterations=iter_Adam_RAR) #define how many training iterations between RAR sessions 
+    with training_log.stage(f"Adam (RAR {i + 1})"):
+        model.train(iterations=iter_Adam_RAR) #define how many training iterations between RAR sessions 
 
 
 
@@ -380,7 +386,8 @@ plt.pause(0.001)
 #9) L-BFGS optimizer to finely tune the physics losses
 print("Fine-tuning with L-BFGS optimizer...")
 model.compile("L-BFGS", loss_weights=weights)
-model.train()
+with training_log.stage("L-BFGS"):
+    model.train()
 
 
 # Save trained model to models/ folder
@@ -393,6 +400,10 @@ save_path = model.save(f"models/pinn_model_V3_{timestamp}")
 # Prints exact file name for saved model
 print("Saved model: ")
 print(save_path)
+
+# Save loss history and training time next to the model, then save its plots
+training_log.save(save_path)
+plot_after_training(save_path)
 
 
 

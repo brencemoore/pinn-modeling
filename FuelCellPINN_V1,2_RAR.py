@@ -15,12 +15,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from datetime import datetime
+from pinn_utils import TrainingLog
+from plot_pinn_model import plot_after_training
 
 #GPU check
 print("PyTorch version:", torch.__version__)
 print("CUDA version:", torch.version.cuda)
 print("GPU available:", torch.cuda.is_available())
 
+
+SEED = 42
+dde.config.set_random_seed(SEED)
 
 
 #1) DEFINE MODEL INPUTS
@@ -189,7 +194,9 @@ plt.show(block=False)
 plt.pause(0.001)
 #------------------------------
 
-model.train(iterations=1000) #Adam iterations before RAR
+training_log = TrainingLog(model)  # records loss history and training time
+with training_log.stage("Adam (initial)"):
+    model.train(iterations=1000) #Adam iterations before RAR
 
 # 8). Residual-based Adaptive Refinement W/ Adam
 
@@ -243,17 +250,20 @@ for i in range(max_rar_iterations):
     
     # 7. Inject the worst performing points directly into the active training pool
     model.data.add_anchors(new_points)
+    training_log.add_rar_points(new_points, rar_round=i + 1)
     
     # 8. Retrain the network with the newly added constraints
-    model.train(iterations=1000) #define how many training iterations between RAR sessions 
+    with training_log.stage(f"Adam (RAR {i + 1})"):
+        model.train(iterations=1000) #define how many training iterations between RAR sessions 
 
 
 
 
 #9) L-BFGS optimizer to finely tune the physics losses
 print("Fine-tuning with L-BFGS optimizer...")
-model.compile("L-BFGS")
-model.train()
+model.compile("L-BFGS", loss_weights=weights)
+with training_log.stage("L-BFGS"):
+    model.train()
 
 
 # Save trained model to models/ folder
@@ -266,6 +276,10 @@ save_path = model.save(f"models/pinn_model_V1.2_{timestamp}")
 # Prints exact file name for saved model
 print("Saved model: ")
 print(save_path)
+
+# Save loss history and training time next to the model, then save its plots
+training_log.save(save_path)
+plot_after_training(save_path)
 
 
 #10) Predict and Visualize Results
