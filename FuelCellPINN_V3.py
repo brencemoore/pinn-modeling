@@ -42,8 +42,8 @@ dde.config.set_random_seed(SEED)
 rho = 0.0306     #kg/m^3 #CONSTANT FOR NOW, hydrogen
 mu = 0.001002    #N*s/m^2 #CONSTANT FOR NOW
 uAVG = 1         #m/s, inlet velocity
-T_w = 1000       #K, constant wall temperature
-T_0 = 800        #K, constant inlet temperature profile
+T_w = 1000      #K, constant wall temperature
+T_0 = 1000       #K, constant inlet temperature profile
 M_A = 2.016      #Molar mass H2, g/mol
 M_B = 18.015     #Molar mass H20, g/mol
 M_0 = M_A        #Reference molar mass, g/mol
@@ -66,24 +66,25 @@ sigma_B = 2.725;               #(Angstrom), collision diameter species B (H20)
 sigma_AB = (sigma_A+sigma_B)/2 #average collision diameter
 epsA = 38     #K   
 epsB = 361.53 #K
-#j0 = 10000    #Exchange current density, A/m^2
-#X1_0 = 
-#X2_0 = 
 
-
-
-C = p/(R_gas*T_w) #density kg/m^3
+#butler volmer
+C = p/(R_gas*T_w) #density wall kg/m^3
 j0 = 1.2e4
 alpha = 0.5   #transfer coefficients (anode=cathode)
 eta = 0.1 #constant for now
 beta1 = 1
 n=2
 k_boltz = 1.380649e-23;  # {J/K} Boltzmann Constant
-Re = rho*uAVG*2*R/mu
+Re = rho*uAVG*2*R/mu #Reynolds number, radius based
 
-BE = T_w/np.sqrt(epsA * epsB);                                                  # Binary Energy Ratio
-omega_AB = (0.4609*BE**2 + 33.2*BE + 37.6)/(BE**2 + 44.96*BE + 3.747);        # Collision Integral
-D_ref = D = 1e-4 * 0.0018583*(T_0**3*(1/M_A+1/M_B))**0.5 /(p_atm*sigma_AB**2*omega_AB) #reference diffusion coeff. based on reference temperature
+def diffusivity(T):
+    BE = T/np.sqrt(epsA * epsB);                                                         # Binary Energy Ratio
+    omega_AB_0 = (0.4609*BE**2 + 33.2*BE + 37.6)/(BE**2 + 44.96*BE + 3.747);                 # Collision Integral
+    D = 1e-4 * 0.0018583*(T**3*(1/M_A+1/M_B))**0.5 /(p_atm*sigma_AB**2*omega_AB_0) #reference diffusion coeff. based on reference temperature
+    return D
+
+D_ref = diffusivity(T_0) #reference diffusivity (inlet)
+D_w = diffusivity(T_w) #wall diffusivity
 
 #dimensionless quantities
 a = k/(rho*C_p) #thermal diffusivity 
@@ -151,7 +152,9 @@ def physLoss(x,y):
 
 
     #Diffusion calculations
-    D = 1e-4 * 0.0018583*(T_corr**3*(1/M_A+1/M_B))**0.5 /(p_atm*sigma_AB**2*omega_AB)  # diffusion coefficient (inter species), m^2/s (1e-4 converts from cm^2/s to m^2/s)
+    
+    D = diffusivity(T_corr)
+    # D = D_ref #uncomment to turn off temperature coupling
     D_bar = D/D_ref
     # porosity = 0.2 #of anode
     # tort = 1.5 #tortuosity of anode
@@ -173,12 +176,15 @@ def physLoss(x,y):
     dPsi1_r = dde.grad.jacobian(Psi_1,x,i=0,j=1)
 
     #diffusion
-    dD_z = dde.grad.jacobian(D_bar,x,i=0,j=0)
-    dD_r = dde.grad.jacobian(D_bar,x,i=0,j=1)
+    dD_z = dde.grad.jacobian(D_bar,x,i=0,j=0) 
+    dD_r = dde.grad.jacobian(D_bar,x,i=0,j=1) 
+    # dD_z = 0 #uncomment to overwrite temperture coupling
+    # dD_r = 0 #uncomment to overwrite temperture coupling
    
     #temperature
     dT_z = dde.grad.jacobian(y,x,i=1,j=0)
     dT_r = dde.grad.jacobian(y,x,i=1,j=1)
+   
   
 
     #SECOND DERIVATIVES
@@ -230,8 +236,7 @@ def wall_func(x, y,_):
   j = j0*(np.exp(n*alpha*F*eta/(R_gas*T_w))-np.exp(-n*(1-alpha)*F*eta/(R_gas*T_w)))*((X1/X1_0)**beta1) 
   #j = 1.2e6*X1
   J = -j/(2*F)
-  
-  return J - (C*D/R)*dde.grad.jacobian(y, x, i=0, j=1)
+  return J - (C*D_w/R)*dde.grad.jacobian(y, x, i=0, j=1)
 
 
 #Associate boundary conditions with the walls
@@ -249,7 +254,7 @@ bc_left_X1 = dde.icbc.DirichletBC(geom, lambda x: 1, left_wall, component=0)
 bc_left_T = dde.icbc.DirichletBC(geom, lambda x: 0, left_wall, component=1)
 
 # --- RIGHT WALL (Outlet): ---
-bc_right_X1 = dde.icbc.OperatorBC(geom, lambda x, y, _: (C*D/L)*dde.grad.jacobian(y, x, i=0, j=0), right_wall,)
+bc_right_X1 = dde.icbc.OperatorBC(geom, lambda x, y, _: (C*D_w/L)*dde.grad.jacobian(y, x, i=0, j=0), right_wall,) #assuming D_w at exit due to close temperatures
 bc_right_T = dde.icbc.OperatorBC(geom, lambda x, y, _: dde.grad.jacobian(y, x, i=1, j=0),right_wall,)
 
 #Combine boundary conditions
@@ -272,6 +277,13 @@ data = dde.data.PDE(
 layer_size = [2] + [20] * 5 + [2]  # Input (x, t) -> 5 hidden layers of 20 neurons -> Output (u_z, u_r, p)
 activation = "tanh"
 initializer = "Glorot normal"
+
+#Set early stopping criteria
+early_stopping = dde.callbacks.EarlyStopping(
+    monitor="loss_train",       # Options: 'loss_train' or 'loss_test'
+    baseline=1e-3,              # Stops training once total loss <= baseline
+    patience=0                  # Stop immediately without waiting for extra epochs
+)
 
 dde.optimizers.config.set_LBFGS_options(
     maxcor=3000,
