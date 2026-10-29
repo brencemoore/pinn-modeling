@@ -1,0 +1,189 @@
+{
+  "label": "V3_exp",
+  "model": {
+    "checkpoint": "models\\v3_exp\\pinn_model_V3_exp_2026-10-28_1322-7000.pt",
+    "script": "FuelCellPINN_V3-exp.py",
+    "version": "V3_exp",
+    "trained": "2026-10-28 13:22",
+    "step": 7000,
+    "layer_size": [
+      2,
+      20,
+      20,
+      20,
+      20,
+      20,
+      2
+    ],
+    "parameters": 1782,
+    "dtype": "float64",
+    "lbfgs_iterations": 2000,
+    "outputs": [
+      "X1",
+      "T"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0
+      ]
+    ],
+    "equations": [
+      "lossSpec",
+      "lossEnergy"
+    ],
+    "boundary_conditions": [
+      "bc_wall_X1",
+      "bc_axis_X1",
+      "bc_left_X1",
+      "bc_right_X1",
+      "bc_wall_T",
+      "bc_axis_T",
+      "bc_left_T",
+      "bc_right_T"
+    ]
+  },
+  "accuracy": {
+    "training_objective": 0.0022468461931961898,
+    "loss_weights": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "mean_pde_rmse": 0.019720526259302925,
+    "pde_residuals": {
+      "lossSpec": {
+        "rmse": 0.01159456892809185,
+        "mse": 0.000134434028628273,
+        "mae": 0.007183744377593695,
+        "max_abs": 0.3619167486117778,
+        "points": 10000
+      },
+      "lossEnergy": {
+        "rmse": 0.027846483590514,
+        "mse": 0.0007754266483567655,
+        "mae": 0.019069441820160817,
+        "max_abs": 0.5214359753547155,
+        "points": 10000
+      }
+    },
+    "boundary_errors": {
+      "bc_wall_X1": {
+        "rmse": 0.005263649632140115,
+        "mse": 2.7706007449928765e-05,
+        "mae": 0.004008705541124128,
+        "max_abs": 0.0508760267857451,
+        "points": 1000
+      },
+      "bc_axis_X1": {
+        "rmse": 0.0019719637561365303,
+        "mse": 3.888641055516094e-06,
+        "mae": 0.0014466226209204445,
+        "max_abs": 0.006501942717231332,
+        "points": 1000
+      },
+      "bc_left_X1": {
+        "rmse": 0.0017294020046324965,
+        "mse": 2.9908312936268973e-06,
+        "mae": 0.0014098380532294825,
+        "max_abs": 0.0057240818273114336,
+        "points": 1000
+      },
+      "bc_right_X1": {
+        "rmse": 0.014314331478987679,
+        "mse": 0.0002049000856903376,
+        "mae": 0.014309408232715665,
+        "max_abs": 0.014696237222910254,
+        "points": 1000
+      },
+      "bc_wall_T": {
+        "rmse": 0.03096111631276912,
+        "mse": 0.0009585907233328182,
+        "mae": 0.013797870646375983,
+        "max_abs": 0.7088429113832753,
+        "points": 1000
+      },
+      "bc_axis_T": {
+        "rmse": 0.004276614680990263,
+        "mse": 1.828943312966145e-05,
+        "mae": 0.002911084544077894,
+        "max_abs": 0.016413068604595477,
+        "points": 1000
+      },
+      "bc_left_T": {
+        "rmse": 0.00793431643258355,
+        "mse": 6.295337725236535e-05,
+        "mae": 0.0031843177690944985,
+        "max_abs": 0.06426542224562667,
+        "points": 1000
+      },
+      "bc_right_T": {
+        "rmse": 0.0075938407283071725,
+        "mse": 5.7666417006896814e-05,
+        "mae": 0.006177391753524212,
+        "max_abs": 0.016201558291065368,
+        "points": 1000
+      }
+    }
+  },
+  "cost": {
+    "parameters": 1782,
+    "forward_flops_per_point": 3360,
+    "training_steps": 7000,
+    "lbfgs_iterations": 2000,
+    "training_seconds": 2494.281697499915,
+    "residual_ms_per_1000_points": 7.773159991484135,
+    "inference_timing": [
+      {
+        "batch_size": 1,
+        "median_ms": 1.0679999832063913,
+        "p95_ms": 1.326279970817268,
+        "points_per_second": 936.3296027381582
+      },
+      {
+        "batch_size": 100,
+        "median_ms": 1.1412000749260187,
+        "p95_ms": 1.5818500309251249,
+        "points_per_second": 87627.05348269694
+      },
+      {
+        "batch_size": 1000,
+        "median_ms": 1.5595998847857118,
+        "p95_ms": 2.210410078987479,
+        "points_per_second": 641190.0960978845
+      },
+      {
+        "batch_size": 10000,
+        "median_ms": 2.898499951697886,
+        "p95_ms": 3.0427200254052877,
+        "points_per_second": 3450060.4335501855
+      },
+      {
+        "batch_size": 40000,
+        "median_ms": 9.662800002843142,
+        "p95_ms": 9.829130000434816,
+        "points_per_second": 4139586.868012436
+      }
+    ]
+  },
+  "predictions_finite": true,
+  "runtime": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.12.0+cu126",
+    "deepxde": "1.15.0",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU"
+  }
+}

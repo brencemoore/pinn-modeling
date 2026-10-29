@@ -61,7 +61,7 @@ maxiter_LBFGS = 5000 #max iterations to run LBFGS
 gtol_LBFGS = 1e-8 #residual to stop LBFGS and end all training
 
 #Training display
-display_every_Adam = 100 #Adam iterations between loss updates (terminal and live plot)
+display_every_Adam = 100 #iterations between live plot updates (Adam and L-BFGS)
 #------------------------------------------
 
 #2) FORMAT GEOMETRY
@@ -233,6 +233,7 @@ live_plot = LiveLossPlot(
                 "bc_axis_p", "bc_left_uz", "bc_left_ur", "bc_right_p"],
     num_pde_terms=3,
     title="V1.3_exp",
+    lbfgs_redraw_every=display_every_Adam,  # same update rate for L-BFGS as for Adam
 )
 
 with training_log.stage("Adam (initial)"):
