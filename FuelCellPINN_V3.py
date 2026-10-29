@@ -39,20 +39,24 @@ dde.config.set_random_seed(SEED)
 #1) DEFINE MODEL INPUTS
 
 #general fluid properties
-rho = 0.0306     #kg/m^3 #CONSTANT FOR NOW, hydrogen
+rho_1 = 0.0306     #kg/m^3 #CONSTANT FOR NOW, hydrogen
+rho_2 = 998      #kg/m^3, Water
 mu = 0.001002    #N*s/m^2 #CONSTANT FOR NOW
 uAVG = 1         #m/s, inlet velocity
 T_w = 1000      #K, constant wall temperature
-T_0 = 1000       #K, constant inlet temperature profile
+T_0 = 800       #K, constant inlet temperature profile
 M_A = 2.016      #Molar mass H2, g/mol
 M_B = 18.015     #Molar mass H20, g/mol
 M_0 = M_A        #Reference molar mass, g/mol
 F = 96485        #Faradays constant, coulombs/mole
 R_gas = 8.314    #Universal gas constant, J/(mol*K)
 p = 1.01e5       #Pa, assume constant
+p_0 = p
+p_e = p-1e-5
 p_atm = p/1.01e5 #atm
 k = 0.18 #W/(m*K), thermal conductivity (H2)
-C_p = 14304 #J/(kg*K), specific heat capacity at constant pressure (H2)
+C_p1 = 14304 #J/(kg*K), specific heat capacity at constant pressure (H2)
+C_p2 = 4187 #J/(kg*K)
 
 #geometry
 L=0.1            #m, tube length
@@ -68,14 +72,14 @@ epsA = 38     #K
 epsB = 361.53 #K
 
 #butler volmer
-C = p/(R_gas*T_w) #density wall kg/m^3
+c_w = p/(R_gas*T_w) #density wall mol/m^3     
 j0 = 1.2e4
 alpha = 0.5   #transfer coefficients (anode=cathode)
 eta = 0.1 #constant for now
 beta1 = 1
 n=2
 k_boltz = 1.380649e-23;  # {J/K} Boltzmann Constant
-Re = rho*uAVG*2*R/mu #Reynolds number, radius based
+# Re = rho*uAVG*2*R/mu #Reynolds number, radius based
 
 def diffusivity(T):
     BE = T/np.sqrt(epsA * epsB);                                                         # Binary Energy Ratio
@@ -86,10 +90,19 @@ def diffusivity(T):
 D_ref = diffusivity(T_0) #reference diffusivity (inlet)
 D_w = diffusivity(T_w) #wall diffusivity
 
+#density
+def rho_mix(T,p,M_mix):
+        return p*M_mix*1e-3/(R_gas*T)
+
+#specific heat
+def C_p_mix(X1,X2):
+    return X1*C_p1 + X2*C_p2
+
 #dimensionless quantities
-a = k/(rho*C_p) #thermal diffusivity 
+a = k/(rho_mix(T_0,p,M_A)*C_p1) #thermal diffusivity (Hydrogen only simplification)
 Pe_L = uAVG*L/a #Peclet number
 Pe_iL = uAVG*L/D_ref #Species Peclet number
+pi_p = p-p_0/(p_0-p_e)
 L_R = L/R
 R_L = R/L
 
@@ -143,16 +156,27 @@ def physLoss(x,y):
     X2 = 1-X1   #Mole fraction species 2, H20 (produced)
     T = y[:,1:2] #Temperature out, non-dimensional
 
+
     #re-dimensionalize T for diffusion calc
     T_corr = T_0 + T*(T_w-T_0)
 
     M_mix = X1*M_A + X2*M_B #average molar mass
     M_mix_bar = M_mix/M_0
+    M_A_bar = M_A/M_0
+    M_B_bar = M_B/M_0
     Psi_1 = X1/M_mix_bar 
+    Psi_2 = X2/M_mix_bar
+
+    #density
+    rho_bar = rho_mix(T_corr,p,M_mix)/rho_1 #rho_1 is the reference density
+
+    #specific heat
+    C_p_mix_bar = C_p_mix(X1,X2)/C_p1
+    C_p1_bar = C_p1/C_p1
+    C_p2_bar = C_p2/C_p1
 
 
     #Diffusion calculations
-    
     D = diffusivity(T_corr)
     # D = D_ref #uncomment to turn off temperature coupling
     D_bar = D/D_ref
@@ -174,6 +198,8 @@ def physLoss(x,y):
     dX1_r = dde.grad.jacobian(y,x,i=0,j=1)
     dPsi1_z = dde.grad.jacobian(Psi_1,x,i=0,j=0)
     dPsi1_r = dde.grad.jacobian(Psi_1,x,i=0,j=1)
+    dPsi2_z = dde.grad.jacobian(Psi_2,x,i=0,j=0)
+    dPsi2_r = dde.grad.jacobian(Psi_2,x,i=0,j=1)
 
     #diffusion
     dD_z = dde.grad.jacobian(D_bar,x,i=0,j=0) 
@@ -184,7 +210,14 @@ def physLoss(x,y):
     #temperature
     dT_z = dde.grad.jacobian(y,x,i=1,j=0)
     dT_r = dde.grad.jacobian(y,x,i=1,j=1)
-   
+
+    # density
+    drho_z = dde.grad.jacobian(rho_bar,x,i=0,j=0)
+    drho_r = dde.grad.jacobian(rho_bar,x,i=0,j=1)
+
+    #pressure
+    dp_z = 0 #constant pressure
+    dp_r = 0 #constant pressure
   
 
     #SECOND DERIVATIVES
@@ -193,6 +226,7 @@ def physLoss(x,y):
     dX1_rr = dde.grad.hessian(y, x, component=0, i=1, j=1)
     dPsi1_zz = dde.grad.hessian(Psi_1, x, component=0, i=0, j=0)
     dPsi1_rr = dde.grad.hessian(Psi_1, x, component=0, i=1, j=1)
+   
 
     #temperature
     dT_zz = dde.grad.hessian(y, x, component=1, i=0, j=0)
@@ -205,8 +239,11 @@ def physLoss(x,y):
     #No time transients
     #variables in following equations are assumed to be dimensionless, so additional notation is not applied 
   
-    lossSpec = r/R_L *u_r*dPsi1_r + r*u_z*dPsi1_z - 1/Pe_iL*(r*D_bar/(R_L**2)*dPsi1_rr + D_bar/(R_L**2)*dPsi1_r + r/R_L**2*dD_r*dPsi1_r + r*D_bar*dPsi1_zz + r*dD_z*dPsi1_z)
-    lossEnergy = r*u_r/R_L*dT_r + r*u_z*dT_z - 1/Pe_L*(1/R_L**2 *(r*dT_rr + dT_r) + r*dT_zz)
+    # lossSpec = r/R_L *u_r*dPsi1_r + r*u_z*dPsi1_z - 1/Pe_iL*(r*D_bar/(R_L**2)*dPsi1_rr + D_bar/(R_L**2)*dPsi1_r + r/R_L**2*dD_r*dPsi1_r + r*D_bar*dPsi1_zz + r*dD_z*dPsi1_z)
+    lossSpec = r*u_r/R_L*dPsi1_r + r*u_z*dPsi1_z - 1/Pe_iL*(r*D_bar/R_L**2*dPsi1_rr + D_bar/(R_L**2)*dPsi1_r + r*D_bar*dPsi1_zz + r/R_L**2*dD_r*dPsi1_r + r*dD_z*dPsi1_z + r*D_bar/(R_L**2*rho_bar)*drho_r*dPsi1_r + r*D_bar/rho_bar*drho_z*dPsi1_z)
+
+    # lossEnergy = r*u_r/R_L*dT_r + r*u_z*dT_z - 1/Pe_L*(1/R_L**2 *(r*dT_rr + dT_r) + r*dT_zz)
+    lossEnergy = r*rho_bar*(u_r/R_L*dT_r+u_z*dT_z) - 1/Pe_L*(r/R_L**2*dT_rr + 1/(R_L**2)*dT_r + r*dT_zz) - r*pi_p*(u_r/R_L*dp_r + u_z*dp_z) + r*C_p1_bar*((-rho_bar*D_bar*M_A_bar*dPsi1_r/(R_L**2*Pe_iL))*dT_r - (rho_bar*D_bar*M_A_bar*dPsi1_z/Pe_iL)*dT_z) + r*C_p2_bar*((-rho_bar*D_bar*M_B_bar*dPsi2_r/(R_L**2*Pe_iL))*dT_r - (rho_bar*D_bar*M_B_bar*dPsi2_z/Pe_iL)*dT_z)
     return [lossSpec, lossEnergy]
 
 #4) Boundary Conditions
@@ -236,7 +273,7 @@ def wall_func(x, y,_):
   j = j0*(np.exp(n*alpha*F*eta/(R_gas*T_w))-np.exp(-n*(1-alpha)*F*eta/(R_gas*T_w)))*((X1/X1_0)**beta1) 
   #j = 1.2e6*X1
   J = -j/(2*F)
-  return J - (C*D_w/R)*dde.grad.jacobian(y, x, i=0, j=1)
+  return J - (c_w*D_w/R)*dde.grad.jacobian(y, x, i=0, j=1)
 
 
 #Associate boundary conditions with the walls
@@ -254,7 +291,7 @@ bc_left_X1 = dde.icbc.DirichletBC(geom, lambda x: 1, left_wall, component=0)
 bc_left_T = dde.icbc.DirichletBC(geom, lambda x: 0, left_wall, component=1)
 
 # --- RIGHT WALL (Outlet): ---
-bc_right_X1 = dde.icbc.OperatorBC(geom, lambda x, y, _: (C*D_w/L)*dde.grad.jacobian(y, x, i=0, j=0), right_wall,) #assuming D_w at exit due to close temperatures
+bc_right_X1 = dde.icbc.OperatorBC(geom, lambda x, y, _: (c_w*D_w/L)*dde.grad.jacobian(y, x, i=0, j=0), right_wall,) #assuming D_w at exit due to close temperatures  #FIX RHO, NOT CONSTANT
 bc_right_T = dde.icbc.OperatorBC(geom, lambda x, y, _: dde.grad.jacobian(y, x, i=1, j=0),right_wall,)
 
 #Combine boundary conditions
