@@ -1,0 +1,281 @@
+{
+  "model_a": {
+    "checkpoint": "models\\v3\\pinn_model_V3_2026-10-28_0526-7000.pt",
+    "script": "FuelCellPINN_V3.py",
+    "version": "V3",
+    "trained": "2026-10-28 05:26",
+    "step": 7000,
+    "layer_size": [
+      2,
+      20,
+      20,
+      20,
+      20,
+      20,
+      2
+    ],
+    "parameters": 1782,
+    "dtype": "float64",
+    "lbfgs_iterations": 2000,
+    "outputs": [
+      "X1",
+      "T"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0
+      ]
+    ],
+    "equations": [
+      "lossSpec",
+      "lossEnergy"
+    ],
+    "boundary_conditions": [
+      "bc_wall_X1",
+      "bc_axis_X1",
+      "bc_left_X1",
+      "bc_right_X1",
+      "bc_wall_T",
+      "bc_axis_T",
+      "bc_left_T",
+      "bc_right_T"
+    ]
+  },
+  "model_b": {
+    "checkpoint": "models\\v3_exp\\pinn_model_V3_exp_2026-10-28_1322-7000.pt",
+    "script": "FuelCellPINN_V3-exp.py",
+    "version": "V3_exp",
+    "trained": "2026-10-28 13:22",
+    "step": 7000,
+    "layer_size": [
+      2,
+      20,
+      20,
+      20,
+      20,
+      20,
+      2
+    ],
+    "parameters": 1782,
+    "dtype": "float64",
+    "lbfgs_iterations": 2000,
+    "outputs": [
+      "X1",
+      "T"
+    ],
+    "domain": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0
+      ]
+    ],
+    "equations": [
+      "lossSpec",
+      "lossEnergy"
+    ],
+    "boundary_conditions": [
+      "bc_wall_X1",
+      "bc_axis_X1",
+      "bc_left_X1",
+      "bc_right_X1",
+      "bc_wall_T",
+      "bc_axis_T",
+      "bc_left_T",
+      "bc_right_T"
+    ]
+  },
+  "same_physics": true,
+  "summary_lower_is_better": [
+    {
+      "kind": "accuracy",
+      "metric": "Training objective (weighted loss)",
+      "a": 0.03996092968745213,
+      "b": 0.0022468461931961898,
+      "change_percent": -94.3773925912897,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "Mean PDE residual RMSE",
+      "a": 0.10673725274849266,
+      "b": 0.019720526259302925,
+      "change_percent": -81.52423286950167,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "PDE lossSpec RMSE",
+      "a": 0.18562802190647132,
+      "b": 0.01159456892809185,
+      "change_percent": -93.75386926552835,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "PDE lossEnergy RMSE",
+      "a": 0.027846483590514,
+      "b": 0.027846483590514,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_wall_X1 RMSE",
+      "a": 0.05677293033877276,
+      "b": 0.005263649632140115,
+      "change_percent": -90.72859265722042,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_axis_X1 RMSE",
+      "a": 0.0019719637561365303,
+      "b": 0.0019719637561365303,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_left_X1 RMSE",
+      "a": 0.0017294020046324965,
+      "b": 0.0017294020046324965,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_right_X1 RMSE",
+      "a": 0.020004886399675972,
+      "b": 0.014314331478987679,
+      "change_percent": -28.445824720006733,
+      "better": "B"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_wall_T RMSE",
+      "a": 0.03096111631276912,
+      "b": 0.03096111631276912,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_axis_T RMSE",
+      "a": 0.004276614680990263,
+      "b": 0.004276614680990263,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_left_T RMSE",
+      "a": 0.00793431643258355,
+      "b": 0.00793431643258355,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "accuracy",
+      "metric": "BC bc_right_T RMSE",
+      "a": 0.0075938407283071725,
+      "b": 0.0075938407283071725,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "cost",
+      "metric": "Parameters",
+      "a": 1782,
+      "b": 1782,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "cost",
+      "metric": "Forward FLOPs per point",
+      "a": 3360,
+      "b": 3360,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "cost",
+      "metric": "PDE residual ms per 1k points",
+      "a": 7.895830005872995,
+      "b": 7.773159991484135,
+      "change_percent": -1.5536050585893584,
+      "better": "B"
+    },
+    {
+      "kind": "cost",
+      "metric": "Inference ms (n=40,000 vs 40,000)",
+      "a": 10.193199967034161,
+      "b": 9.662800002843142,
+      "change_percent": -5.203468644845452,
+      "better": "B"
+    },
+    {
+      "kind": "cost",
+      "metric": "Training steps",
+      "a": 7000,
+      "b": 7000,
+      "change_percent": 0.0,
+      "better": "tie"
+    },
+    {
+      "kind": "cost",
+      "metric": "Training time (s)",
+      "a": 3331.2387509000255,
+      "b": 2494.281697499915,
+      "change_percent": -25.12449920240582,
+      "better": "B"
+    }
+  ],
+  "validation_prediction_differences_b_minus_a": {
+    "X1": {
+      "rmse": 0.0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "T": {
+      "rmse": 0.0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    }
+  },
+  "grid_prediction_differences_b_minus_a": {
+    "X1": {
+      "rmse": 0.0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "T": {
+      "rmse": 0.0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    }
+  },
+  "runtime": {
+    "python": "3.14.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "torch": "2.12.0+cu126",
+    "deepxde": "1.15.0",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU"
+  },
+  "notes": [
+    "Accuracy metrics measure consistency with each model's own encoded equations and boundary conditions, not agreement with a trusted reference solution.",
+    "When the models solve different physics, only computation cost is directly comparable.",
+    "Training time is only available for checkpoints with a training record (<checkpoint>_training.json).",
+    "Timing depends on hardware and system load."
+  ]
+}
