@@ -41,6 +41,7 @@ MODEL_SCRIPTS = {
     "V1.3_exp": "FuelCellPINN_V1,3_RAR_training_display.py",
     "V2.2": "FuelCellPINN_V2,2.py",
     "V3": "FuelCellPINN_V3.py",
+    "V3_exp": "FuelCellPINN_V3-exp.py",
 }
 
 # Trained models are saved in one subfolder per version, e.g. models/v3/

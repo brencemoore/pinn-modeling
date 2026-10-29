@@ -239,12 +239,15 @@ with training_log.stage("Adam (initial)"):
     model.train(
         iterations=iter_Adam_initialize,
         display_every=display_every_Adam,
+        verbose=0,  # hide DeepXDE's loss table; the progress line and live plots show the loss
         callbacks=[
             TrainingProgress(
                 optimizer="Adam",
                 total_iterations=iter_Adam_initialize,
                 stage="Initial",
-                display_every=display_every_Adam
+                display_every=display_every_Adam,
+                num_pde_terms=3,
+                deepxde_prints=False
             ),
             live_plot.stage("Initial")
         ]
@@ -312,12 +315,15 @@ for i in range(max_rar_iterations):
         model.train(
             iterations=iter_Adam_RAR,
             display_every=display_every_Adam,
+            verbose=0,
             callbacks=[
                 TrainingProgress(
                     optimizer="Adam",
                     total_iterations=iter_Adam_RAR,
                     stage=f"RAR {i + 1}",
-                    display_every=display_every_Adam
+                    display_every=display_every_Adam,
+                    num_pde_terms=3,
+                    deepxde_prints=False
                 ),
                 live_plot.stage(f"RAR {i + 1}")
             ]
@@ -333,11 +339,14 @@ model.compile("L-BFGS", loss_weights=weights)
 # EXPERIMENTAL TRAINING DISPLAY
 with training_log.stage("L-BFGS"):
     model.train(
+        verbose=0,
         callbacks=[
             TrainingProgress(
                 optimizer="L-BFGS",
                 total_iterations=maxiter_LBFGS,
-                stage="Fine-tune"
+                stage="Fine-tune",
+                num_pde_terms=3,
+                deepxde_prints=False
             ),
             live_plot.stage("L-BFGS")
         ]
