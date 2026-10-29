@@ -49,10 +49,10 @@ import pinn_utils as pu
 # User configuration: edit these before running the script.
 # Paths are relative to the project root (the working directory in VS Code).
 # ---------------------------------------------------------------------------
-MODEL_A_PATH = Path("models/v1.3/pinn_model_V1.3_2026-10-28_0238-13059.pt")
-MODEL_B_PATH = Path("models/v1.3_exp/pinn_model_V1.3_exp_2026-10-28_0342-13059.pt")
-MODEL_A_LABEL = "V1.3"
-MODEL_B_LABEL = "V1.3_exp"
+MODEL_A_PATH = Path("models/v3/pinn_model_V3_2026-10-28_1322-7000.pt")
+MODEL_B_PATH = Path("models/v3/pinn_model_V3_2026-10-28_1341-7000.pt.pt")
+MODEL_A_LABEL = "V3 No temp coupling"
+MODEL_B_LABEL = "V3 with temp coupling"
 
 # Set to a script path to skip the automatic lookup (needed for older
 # checkpoints saved without a version, e.g. pinn_model-10000.pt)

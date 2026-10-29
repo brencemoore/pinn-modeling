@@ -104,7 +104,7 @@ boundary_pts = 1500
 interior_pts = 2000
 
 #Adam Solver
-iter_Adam_initialize = 5000 #iterations of Adam before RAR
+iter_Adam_initialize = 2000 #iterations of Adam before RAR
 
 #Residual-based Adaptive Refinement
 iter_Adam_RAR = 1000 #iterations of Adam between RAR steps
