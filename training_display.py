@@ -317,31 +317,32 @@ class LiveLossPlot(dde.callbacks.Callback):
     run, and call stage(name) in the callbacks list to label each call. Like
     TrainingProgress it is read-only, so training results are unchanged.
 
-    The plots redraw whenever DeepXDE records a new loss: every `display_every`
-    steps for Adam (pass display_every to model.train()), and after every
-    L-BFGS chunk of up to 1000 iterations. Inside an L-BFGS chunk they also
-    redraw every `lbfgs_redraw_seconds` with the loss of each L-BFGS iteration
-    (see _LBFGSWatcher). Window events are handled between redraws so the
-    windows can be moved and resized while training runs.
+    The plots redraw whenever DeepXDE records a new loss, every `display_every`
+    steps for Adam (pass display_every to model.train()). DeepXDE records
+    L-BFGS only once per chunk of up to 1000 iterations, so during L-BFGS the
+    loss of every iteration is kept (see _LBFGSWatcher) and the plots redraw
+    every `lbfgs_redraw_every` iterations; pass the same value as Adam's
+    display_every for one update rate. Window events are handled between
+    redraws so the windows can be moved and resized while training runs.
     """
 
     FILE_NAMES = ("live_loss_summary.png", "live_loss_terms.png")
 
     def __init__(self, term_names, num_pde_terms, title="Training loss",
-                 lbfgs_redraw_seconds=10.0, event_seconds=0.1):
+                 lbfgs_redraw_every=100, event_seconds=0.1):
         super().__init__()
         self.term_names = list(term_names)
         self.num_pde_terms = num_pde_terms
         self.title = title
-        self.lbfgs_redraw_seconds = lbfgs_redraw_seconds
+        self.lbfgs_redraw_every = lbfgs_redraw_every
         self.event_seconds = event_seconds
 
         self.next_stage = None
         self.stage_starts = []  # (step, name) for each model.train() call
         self.points_drawn = 0
-        self.live_steps = []    # L-BFGS iterations not yet recorded by DeepXDE
-        self.live_losses = []
-        self.last_redraw = 0.0
+        self.lbfgs_steps = []   # every L-BFGS iteration, which DeepXDE does not record
+        self.lbfgs_losses = []
+        self.last_redraw_iteration = 0
         self.last_events = 0.0
         self.laid_out = []      # figures whose margins are already set
         self.summary_fig = self.terms_fig = None
@@ -359,18 +360,20 @@ class LiveLossPlot(dde.callbacks.Callback):
         name = self.next_stage or self.model.opt_name
         self.stage_starts.append((self.model.train_state.step, name))
         self.next_stage = None
-        self.live_steps, self.live_losses = [], []
+        self.last_redraw_iteration = 0
         if self.model.opt_name.startswith("L-BFGS"):
             _LBFGSWatcher.of(self.model).start(self._on_lbfgs_iteration)
         self._redraw(force=True)
 
     def on_epoch_end(self):
-        self._redraw()
+        if self._redraw() and self.model.opt_name.startswith("L-BFGS"):
+            # End of an L-BFGS chunk: count it as this interval's redraw
+            iteration = self.model.train_state.step - self.stage_starts[-1][0]
+            self.last_redraw_iteration = iteration - iteration % self.lbfgs_redraw_every
         self._process_events()
 
     def on_train_end(self):
         _LBFGSWatcher.of(self.model).stop(self._on_lbfgs_iteration)
-        self.live_steps, self.live_losses = [], []
         self._redraw(force=True)
 
     def save(self, output_dir):
@@ -388,9 +391,11 @@ class LiveLossPlot(dde.callbacks.Callback):
         return paths
 
     def _on_lbfgs_iteration(self, iteration, losses):
-        self.live_steps.append(self.stage_starts[-1][0] + iteration)
-        self.live_losses.append(losses)
-        if time.time() - self.last_redraw >= self.lbfgs_redraw_seconds:
+        if iteration % self.lbfgs_redraw_every == 0:
+            self.lbfgs_steps.append(self.stage_starts[-1][0] + iteration)
+            self.lbfgs_losses.append(losses)
+        # if iteration - self.last_redraw_iteration >= self.lbfgs_redraw_every:
+            self.last_redraw_iteration = iteration
             self._redraw(force=True)
         else:
             self._process_events()
@@ -406,21 +411,24 @@ class LiveLossPlot(dde.callbacks.Callback):
                 fig.canvas.flush_events()
 
     def _redraw(self, force=False):
+        """Redraw both plots; returns True if they were redrawn."""
         # losshistory gets a new row only when DeepXDE recomputes the loss
         history = self.model.losshistory
         if not history.steps or (not force and len(history.steps) == self.points_drawn):
-            return
+            return False
         self.points_drawn = len(history.steps)
-        self.last_redraw = time.time()
 
         steps = np.array(history.steps)
         losses = np.vstack(history.loss_train)  # already multiplied by loss_weights
 
-        # Add L-BFGS iterations from inside the current chunk
-        live = [i for i, step in enumerate(self.live_steps) if step > steps[-1]]
-        if live:
-            steps = np.concatenate([steps, np.array(self.live_steps)[live]])
-            losses = np.vstack([losses, np.array(self.live_losses)[live]])
+        # Fill in the L-BFGS iterations between DeepXDE's once-per-chunk records
+        recorded = set(history.steps)
+        extra = [i for i, step in enumerate(self.lbfgs_steps) if step not in recorded]
+        if extra:
+            steps = np.concatenate([steps, np.array(self.lbfgs_steps)[extra]])
+            losses = np.vstack([losses, np.array(self.lbfgs_losses)[extra]])
+            order = np.argsort(steps, kind="stable")
+            steps, losses = steps[order], losses[order]
 
         names = self.term_names if len(self.term_names) == losses.shape[1] else [
             f"term {i}" for i in range(losses.shape[1])]
@@ -448,6 +456,7 @@ class LiveLossPlot(dde.callbacks.Callback):
             fig.canvas.draw_idle()
             fig.canvas.flush_events()
         self.last_events = time.time()
+        return True
 
     def _format(self, ax, kind, step, fontsize, ncol=1):
         for start, name in self.stage_starts:

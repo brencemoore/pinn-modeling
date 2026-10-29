@@ -117,7 +117,7 @@ maxiter_LBFGS = 2000 #max iterations to run LBFGS
 gtol_LBFGS = 1e-8
 
 #Training display
-display_every_Adam = 100 #Adam iterations between loss updates (terminal and live plot)
+display_every_Adam = 100 #iterations between live plot updates (Adam and L-BFGS)
 #------------------------------------------
 
 #2) FORMAT GEOMETRY
@@ -332,6 +332,7 @@ live_plot = LiveLossPlot(
                 "bc_wall_T", "bc_axis_T", "bc_left_T", "bc_right_T"],
     num_pde_terms=2,
     title="V3_exp",
+    lbfgs_redraw_every=display_every_Adam,  # same update rate for L-BFGS as for Adam
 )
 
 # EXPERIMENTAL TRAINING DISPLAY
@@ -439,12 +440,14 @@ model.compile("L-BFGS", loss_weights=weights)
 # EXPERIMENTAL TRAINING DISPLAY
 with training_log.stage("L-BFGS"):
     model.train(
+        # display_every=display_every_Adam,
         verbose=0,
         callbacks=[
             TrainingProgress(
                 optimizer="L-BFGS",
                 total_iterations=maxiter_LBFGS,
                 stage="Fine-tune",
+                # display_every=display_every_Adam,
                 num_pde_terms=2,
                 deepxde_prints=False
             ),
